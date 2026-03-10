@@ -579,19 +579,62 @@ function processFiles(files) {
       var cash   = 0;
       if (method === 'efectivo') cash = total;
       var mixtoEf = 0, mixtoTr = 0, mixtoTa = 0;
+      
+      // Si es mixto, extraer las partes y crear facturas individuales para cada método
       if (method === 'mixto') {
-        cash = extractCash(text) || total;
-        mixtoEf = extractCash(text);
-        // Try to extract transferencia part from mixto
-        var mTr = text.match(/transf[^\d]*([\d.,]+)/i);
-        if (mTr) { var vTr = parseFloat(mTr[1].replace(/\./g,'').replace(',','.')); if (!isNaN(vTr) && vTr > 0) mixtoTr = vTr; }
-        var mTa = text.match(/tarjeta[^\d]*([\d.,]+)/i);
-        if (mTa) { var vTa = parseFloat(mTa[1].replace(/\./g,'').replace(',','.')); if (!isNaN(vTa) && vTa > 0) mixtoTa = vTa; }
-        if (!mixtoEf && !mixtoTr && !mixtoTa) { mixtoEf = 0; } // no breakdown found
+        // Intentar extraer efectivo con varios patrones: "E:", "Efectivo:", "efectivo"
+        var mEf = text.match(/(?:^|[^a-z])e\s*:\s*\$?\s*([\d.,]+)/i) || 
+                  text.match(/efectivo\s*[:\-]?\s*\$?\s*([\d.,]+)/i);
+        if (mEf) { 
+          var vEf = parseFloat(mEf[1].replace(/\./g,'').replace(',','.')); 
+          if (!isNaN(vEf) && vEf > 0) mixtoEf = vEf; 
+        }
+        
+        // Extraer transferencia con patrones: "Tr:", "T:", "Transferencia", "transf"
+        var mTr = text.match(/(?:^|[^a-z])tr\s*:\s*\$?\s*([\d.,]+)/i) || 
+                  text.match(/transferencia\s*[:\-]?\s*\$?\s*([\d.,]+)/i) ||
+                  text.match(/transf\s*[:\-]?\s*\$?\s*([\d.,]+)/i);
+        if (mTr) { 
+          var vTr = parseFloat(mTr[1].replace(/\./g,'').replace(',','.')); 
+          if (!isNaN(vTr) && vTr > 0) mixtoTr = vTr; 
+        }
+        
+        // Extraer tarjeta con patrones: "T:", "Tarjeta:", pero no "Tr:"
+        var mTa = text.match(/(?:^|[^a-z])t\s*:\s*\$?\s*([\d.,]+)/i) || 
+                  text.match(/tarjeta\s*[:\-]?\s*\$?\s*([\d.,]+)/i);
+        if (mTa) { 
+          var vTa = parseFloat(mTa[1].replace(/\./g,'').replace(',','.')); 
+          if (!isNaN(vTa) && vTa > 0) mixtoTa = vTa; 
+        }
+        
+        // Crear facturas separadas para cada componente del mixto
+        if (mixtoEf > 0) {
+          invoices.push({name: f.name + ' (Efectivo)', method: 'efectivo', total: mixtoEf, cashPart: mixtoEf, mixtoEf: 0, mixtoTr: 0, mixtoTa: 0, isMixtoPart: true});
+        }
+        if (mixtoTr > 0) {
+          invoices.push({name: f.name + ' (Transferencia)', method: 'transferencia', total: mixtoTr, cashPart: 0, mixtoEf: 0, mixtoTr: 0, mixtoTa: 0, isMixtoPart: true});
+        }
+        if (mixtoTa > 0) {
+          invoices.push({name: f.name + ' (Tarjeta)', method: 'tarjeta', total: mixtoTa, cashPart: 0, mixtoEf: 0, mixtoTr: 0, mixtoTa: 0, isMixtoPart: true});
+        }
+        
+        // Log del desglose
+        if (mixtoEf > 0 || mixtoTr > 0 || mixtoTa > 0) {
+          log('  ✓ ' + f.name + ' → MIXTO desglosado:', 'ok');
+          if (mixtoEf > 0) log('    - Efectivo: ' + fmt(mixtoEf), 'ok');
+          if (mixtoTr > 0) log('    - Transferencia: ' + fmt(mixtoTr), 'ok');
+          if (mixtoTa > 0) log('    - Tarjeta: ' + fmt(mixtoTa), 'ok');
+        } else {
+          // Si no se pudo desglosar, mantener como mixto original
+          invoices.push({name: f.name, method: method, total: total, cashPart: cash, mixtoEf: mixtoEf, mixtoTr: mixtoTr, mixtoTa: mixtoTa});
+          log('  ⚠ ' + f.name + ' → MIXTO sin desglose | ' + fmt(total), 'warn');
+        }
+      } else {
+        // Para métodos no mixtos, agregar normalmente
+        invoices.push({name: f.name, method: method, total: total, cashPart: cash, mixtoEf: mixtoEf, mixtoTr: mixtoTr, mixtoTa: mixtoTa});
+        log('  ' + (method !== 'desconocido' ? '✓' : '⚠') + ' ' + f.name + ' → ' + method.toUpperCase() + ' | ' + fmt(total),
+            method !== 'desconocido' ? 'ok' : 'warn');
       }
-      invoices.push({name: f.name, method: method, total: total, cashPart: cash, mixtoEf: mixtoEf, mixtoTr: mixtoTr, mixtoTa: mixtoTa});
-      log('  ' + (method !== 'desconocido' ? '✓' : '⚠') + ' ' + f.name + ' → ' + method.toUpperCase() + ' | ' + fmt(total),
-          method !== 'desconocido' ? 'ok' : 'warn');
       i++; next();
     }).catch(function(err) {
       log('  ✕ ' + f.name + ': ' + err.message, 'err');
@@ -713,9 +756,30 @@ function addManual(name) {
   var amt = parseFloat((document.getElementById('a-'+name)||{}).value || 0);
   var met = (document.getElementById('m-'+name)||{}).value;
   if (!amt || !met) { alert('Ingresa monto y método de pago.'); return; }
-  var inv = null;
-  for (var i = 0; i < invoices.length; i++) { if (invoices[i].name === name) { inv = invoices[i]; break; } }
-  if (inv) { inv.method = met; inv.total = amt; inv.cashPart = (met==='efectivo'||met==='mixto') ? amt : 0; }
+  
+  // Buscar y eliminar la factura desconocida
+  var invIndex = -1;
+  for (var i = 0; i < invoices.length; i++) { 
+    if (invoices[i].name === name) { 
+      invIndex = i; 
+      break; 
+    } 
+  }
+  
+  if (invIndex >= 0) {
+    // Eliminar la factura desconocida
+    invoices.splice(invIndex, 1);
+    
+    // Si es mixto, pedir desglose (en el futuro se podría mejorar con campos adicionales)
+    if (met === 'mixto') {
+      // Por ahora, agregar como mixto sin desglosar
+      invoices.push({name: name, method: met, total: amt, cashPart: amt, mixtoEf: 0, mixtoTr: 0, mixtoTa: 0});
+    } else {
+      // Agregar con el método seleccionado
+      invoices.push({name: name, method: met, total: amt, cashPart: (met==='efectivo') ? amt : 0, mixtoEf: 0, mixtoTr: 0, mixtoTa: 0});
+    }
+  }
+  
   var el = document.getElementById('wr-'+name);
   if (el) el.parentNode.removeChild(el);
   renderResults();
@@ -893,6 +957,10 @@ function printLaNevada() {
     html += '<div class="sec">Transferencias ('+G.transferencia.length+')</div>';
     G.transferencia.forEach(function(inv) {
       var shortName = inv.name.replace(/\.pdf$/i,'').substring(0,25);
+      // Si es parte de un mixto, ya tiene el sufijo, si no agregarlo
+      if (!inv.isMixtoPart) {
+        shortName = shortName;
+      }
       html += '<div class="row"><span class="lbl">'+shortName+'</span><span class="val">'+fmtP(inv.total)+'</span></div>';
     });
     html += '<div class="subtot"><span>Subtotal Transferencias</span><span>'+fmtP(sum(G.transferencia))+'</span></div>';
@@ -910,7 +978,7 @@ function printLaNevada() {
   }
   
   if (G.mixto.length > 0) {
-    html += '<div class="sec">Mixto</div>';
+    html += '<div class="sec">Mixto (sin desglosar)</div>';
     html += '<div class="factura-item">'+G.mixto.length+' factura(s) - Total: '+fmtP(sum(G.mixto))+'</div>';
   }
 
