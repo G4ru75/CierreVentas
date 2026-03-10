@@ -216,7 +216,6 @@ footer{border-top:1px solid var(--border);padding-top:18px;text-align:center;fon
 
 <div class="notice">
   <strong>⚠ Requiere conexión a internet</strong>
-  La app usa la librería PDF.js (cargada desde internet) para leer los archivos. Asegúrate de tener internet activo al abrir esta página.
 </div>
 
 <!-- INPUT OCULTO - fuera del drop area para evitar conflictos Opera -->
@@ -843,22 +842,23 @@ function printLaNevada() {
     +'<style>'
     +'*{margin:0;padding:0;box-sizing:border-box}'
     +'body{font-family:\'Courier New\',monospace;background:white;color:#000;padding:12px 8px;max-width:80mm;margin:0 auto;font-size:12px;line-height:1.4}'
-    +'.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:8px;margin-bottom:10px}'
+    +'.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:8px;margin-bottom:10px;page-break-after:avoid}'
     +'.hdr h1{font-size:16px;font-weight:900;margin-bottom:4px}'
     +'.hdr .fecha{font-size:10px;color:#333}'
-    +'.sec{font-size:11px;font-weight:900;border-bottom:1px solid #000;padding:6px 0 4px 0;margin:12px 0 6px 0;text-transform:uppercase}'
+    +'.sec{font-size:11px;font-weight:900;border-bottom:1px solid #000;padding:6px 0 4px 0;margin:12px 0 6px 0;text-transform:uppercase;page-break-after:avoid}'
     +'.row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px dotted #ccc}'
     +'.row .lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
     +'.row .val{font-weight:700;margin-left:8px;white-space:nowrap}'
-    +'.subtot{display:flex;justify-content:space-between;padding:5px 0;font-size:11px;font-weight:900;margin-top:2px}'
+    +'.subtot{display:flex;justify-content:space-between;padding:5px 0;font-size:11px;font-weight:900;margin-top:2px;page-break-after:avoid}'
     +'.mixto-detail{padding-left:10px;font-size:10px;color:#555;font-style:italic;border-bottom:1px dotted #eee}'
-    +'.total-box{border:2px solid #000;padding:8px;margin:10px 0;text-align:center}'
+    +'.total-box{border:2px solid #000;padding:8px;margin:10px 0;text-align:center;page-break-inside:avoid}'
     +'.total-box .lbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}'
     +'.total-box .val{font-size:18px;font-weight:900}'
-    +'.footer{text-align:center;font-size:9px;color:#666;margin-top:12px;padding-top:8px;border-top:1px dashed #999}'
+    +'.footer{text-align:center;font-size:9px;color:#666;margin-top:12px;padding-top:8px;border-top:1px dashed #999;page-break-before:avoid}'
     +'@media print{'
-    +'  @page{margin:0.5cm;size:80mm auto}'
-    +'  body{padding:0;font-size:11px}'
+    +'  @page{size:80mm 297mm;margin:0}'
+    +'  body{padding:8px;font-size:11px;max-width:80mm;margin:0}'
+    +'  *{page-break-inside:avoid!important}'
     +'}'
     +'</style></head><body>'
     +'<div class="hdr">'
@@ -1043,7 +1043,7 @@ function printNovenaLaPaz() {
   var gastosHTML = '';
   if (gastos.length > 0) {
     gastosHTML += '<div class="gastos-box">';
-    gastosHTML += '<h4>💰 Gastos del Día</h4>';
+    gastosHTML += '<h4> Gastos del Día</h4>';
     gastos.forEach(function(g) {
       gastosHTML += '<div class="gasto-item"><span class="desc">'+g.descripcion+'</span><span class="amt">-'+fmtP(g.monto)+'</span></div>';
     });
