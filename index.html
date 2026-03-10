@@ -582,30 +582,56 @@ function processFiles(files) {
       
       // Si es mixto, extraer las partes y crear facturas individuales para cada método
       if (method === 'mixto') {
+        var txtLower = text.toLowerCase();
+        
+        console.log('═══ PROCESANDO MIXTO:', f.name, '═══');
+        console.log('Texto completo del PDF:', text.substring(0, 500));
+        
         // Intentar extraer efectivo con varios patrones: "E:", "Efectivo:", "efectivo"
-        var mEf = text.match(/(?:^|[^a-z])e\s*:\s*\$?\s*([\d.,]+)/i) || 
-                  text.match(/efectivo\s*[:\-]?\s*\$?\s*([\d.,]+)/i);
+        var mEf = text.match(/\be\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
+                  text.match(/efectivo\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
+                  text.match(/efec\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
+                  text.match(/\(e\)\s*\$?\s*([\d.,]+)/i);
         if (mEf) { 
           var vEf = parseFloat(mEf[1].replace(/\./g,'').replace(',','.')); 
-          if (!isNaN(vEf) && vEf > 0) mixtoEf = vEf; 
+          if (!isNaN(vEf) && vEf > 0) {
+            mixtoEf = vEf;
+            console.log('✓ Efectivo detectado:', vEf, '- Match:', mEf[0]);
+          }
         }
         
-        // Extraer transferencia con patrones: "Tr:", "T:", "Transferencia", "transf"
-        var mTr = text.match(/(?:^|[^a-z])tr\s*:\s*\$?\s*([\d.,]+)/i) || 
-                  text.match(/transferencia\s*[:\-]?\s*\$?\s*([\d.,]+)/i) ||
-                  text.match(/transf\s*[:\-]?\s*\$?\s*([\d.,]+)/i);
+        // Extraer transferencia con patrones: "Tr:", "Trans:", "Transferencia"
+        var mTr = text.match(/\btr\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
+                  text.match(/trans(?:f|ferencia)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
+                  text.match(/\(tr\)\s*\$?\s*([\d.,]+)/i);
         if (mTr) { 
           var vTr = parseFloat(mTr[1].replace(/\./g,'').replace(',','.')); 
-          if (!isNaN(vTr) && vTr > 0) mixtoTr = vTr; 
+          if (!isNaN(vTr) && vTr > 0) {
+            mixtoTr = vTr;
+            console.log('✓ Transferencia detectada:', vTr, '- Match:', mTr[0]);
+          }
         }
         
-        // Extraer tarjeta con patrones: "T:", "Tarjeta:", pero no "Tr:"
-        var mTa = text.match(/(?:^|[^a-z])t\s*:\s*\$?\s*([\d.,]+)/i) || 
-                  text.match(/tarjeta\s*[:\-]?\s*\$?\s*([\d.,]+)/i);
-        if (mTa) { 
-          var vTa = parseFloat(mTa[1].replace(/\./g,'').replace(',','.')); 
-          if (!isNaN(vTa) && vTa > 0) mixtoTa = vTa; 
+        // Extraer tarjeta con patrones: "T:", "Tarj:", "Tarjeta" (pero evitar "Tr:")
+        // Buscar específicamente "T:" sin la r
+        var mTa = null;
+        // Primero buscar "T:" sin que sea "Tr:"
+        var tMatch = text.match(/[^r]\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
+                     text.match(/^\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
+                     text.match(/tarj(?:eta)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
+                     text.match(/\(t\)\s*\$?\s*([\d.,]+)/i);
+        if (tMatch) { 
+          var vTa = parseFloat(tMatch[1].replace(/\./g,'').replace(',','.')); 
+          if (!isNaN(vTa) && vTa > 0) {
+            mixtoTa = vTa;
+            console.log('✓ Tarjeta detectada:', vTa, '- Match:', tMatch[0]);
+          }
         }
+        
+        console.log('Resumen desglose - E:', mixtoEf, 'Tr:', mixtoTr, 'T:', mixtoTa);
+        
+        log('  🔍 Analizando MIXTO en ' + f.name + ':', 'ok');
+        log('    Texto encontrado: ' + text.substring(0, 200).replace(/\n/g, ' '), 'ok');
         
         // Crear facturas separadas para cada componente del mixto
         if (mixtoEf > 0) {
@@ -621,13 +647,13 @@ function processFiles(files) {
         // Log del desglose
         if (mixtoEf > 0 || mixtoTr > 0 || mixtoTa > 0) {
           log('  ✓ ' + f.name + ' → MIXTO desglosado:', 'ok');
-          if (mixtoEf > 0) log('    - Efectivo: ' + fmt(mixtoEf), 'ok');
-          if (mixtoTr > 0) log('    - Transferencia: ' + fmt(mixtoTr), 'ok');
-          if (mixtoTa > 0) log('    - Tarjeta: ' + fmt(mixtoTa), 'ok');
+          if (mixtoEf > 0) log('    ✓ Efectivo: ' + fmt(mixtoEf), 'ok');
+          if (mixtoTr > 0) log('    ✓ Transferencia: ' + fmt(mixtoTr), 'ok');
+          if (mixtoTa > 0) log('    ✓ Tarjeta: ' + fmt(mixtoTa), 'ok');
         } else {
           // Si no se pudo desglosar, mantener como mixto original
           invoices.push({name: f.name, method: method, total: total, cashPart: cash, mixtoEf: mixtoEf, mixtoTr: mixtoTr, mixtoTa: mixtoTa});
-          log('  ⚠ ' + f.name + ' → MIXTO sin desglose | ' + fmt(total), 'warn');
+          log('  ⚠ ' + f.name + ' → MIXTO sin desglose detectado | ' + fmt(total), 'warn');
         }
       } else {
         // Para métodos no mixtos, agregar normalmente
