@@ -101,6 +101,25 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .tbox.vt .tv2{color:var(--text)} .tbox.et .tv2{color:var(--red)}
 .ts{font-size:10px;color:var(--muted);margin-top:3px}
 
+/* GASTOS */
+#gastos-sec{margin-bottom:24px}
+.gastos-box{background:rgba(102,170,238,.05);border:1px solid rgba(102,170,238,.18);border-radius:8px;padding:16px}
+.gastos-box h3{font-size:12px;color:var(--teal);margin-bottom:10px;font-family:'Syne',sans-serif;display:flex;justify-content:space-between;align-items:center}
+.add-gasto-form{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.add-gasto-form input{background:var(--surface);border:1px solid rgba(102,170,238,.25);color:var(--text);padding:6px 10px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;outline:none}
+.add-gasto-form input[type="text"]{flex:1;min-width:180px}
+.add-gasto-form input[type="number"]{width:120px}
+.add-gasto-form button{padding:6px 14px;background:rgba(102,170,238,.15);color:var(--teal);border:1px solid rgba(102,170,238,.3);border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;font-weight:500}
+.gasto-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(102,170,238,.08);font-size:11px;gap:12px}
+.gasto-row:last-child{border-bottom:none}
+.gasto-desc{flex:1;color:var(--text)}
+.gasto-amt{font-weight:700;color:var(--teal);margin-right:8px}
+.gasto-del{padding:4px 10px;background:rgba(238,102,102,.1);color:#ee6666;border:1px solid rgba(238,102,102,.25);border-radius:4px;font-size:9px;cursor:pointer;font-family:'DM Mono',monospace}
+.gastos-total{border-top:2px solid rgba(102,170,238,.25);padding-top:10px;margin-top:8px;display:flex;justify-content:space-between;font-size:12px;font-weight:900}
+.gastos-total .lbl{color:var(--muted)}
+.gastos-total .val{color:var(--teal);font-size:15px}
+.gastos-empty{color:var(--muted);font-style:italic;font-size:10px;text-align:center;padding:8px}
+
 /* UNRECOGNIZED */
 #unk{display:none;margin-bottom:24px}
 .wb{background:rgba(238,200,102,.05);border:1px solid rgba(238,200,102,.18);border-radius:8px;padding:16px}
@@ -121,6 +140,9 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .br{background:transparent;color:var(--red);border:1px solid rgba(238,136,102,.25)} .br:hover{background:rgba(238,136,102,.06)}
 
 footer{border-top:1px solid var(--border);padding-top:18px;text-align:center;font-size:10px;color:var(--muted);margin-top:16px}
+
+/* SEDE SELECTOR */
+.sede-btn:hover{border-color:var(--green)!important;background:rgba(170,238,102,.03)!important;transform:translateY(-2px)!important}
 
 /* PRINT */
 @media print {
@@ -154,13 +176,43 @@ footer{border-top:1px solid var(--border);padding-top:18px;text-align:center;fon
 <body>
 <div class="wrap">
 
+<!-- SELECCIÓN DE SEDE -->
+<div id="sede-selector" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh">
+  <div style="text-align:center;margin-bottom:40px">
+    <h1 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:12px">Selecciona la <em style="color:var(--green)">Sede</em></h1>
+    <p style="font-size:14px;color:var(--muted)">Elige la sede para configurar el formato de impresión</p>
+  </div>
+  <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center">
+    <button onclick="selectSede('nevada')" class="sede-btn" style="width:240px;padding:32px 24px;background:var(--surface);border:2px solid var(--border2);border-radius:12px;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace">
+      <div style="font-size:40px;margin-bottom:16px">🎫</div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green);margin-bottom:8px">La Nevada</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5">Impresora térmica<br>(tickets 80mm)</div>
+    </button>
+    <button onclick="selectSede('novena')" class="sede-btn" style="width:240px;padding:32px 24px;background:var(--surface);border:2px solid var(--border2);border-radius:12px;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace">
+      <div style="font-size:40px;margin-bottom:16px">📄</div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--teal);margin-bottom:8px">Novena - La Paz</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5">Impresora estándar<br>(papel A4)</div>
+    </button>
+  </div>
+</div>
+
+<!-- CONTENIDO PRINCIPAL (oculto hasta seleccionar sede) -->
+<div id="main-content" style="display:none">
+
 <header>
   <div class="logo">
     <h1>Cierre de <em>Ventas</em></h1>
     <p>Procesamiento automático de facturas PDF</p>
   </div>
-  <div class="date-chip" id="dchip">—</div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <div class="date-chip" id="dchip">—</div>
+    <button onclick="changeSede()" style="padding:8px 14px;background:transparent;border:1px solid var(--border2);border-radius:5px;font-size:10px;color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace">Cambiar sede</button>
+  </div>
 </header>
+
+<div class="notice" id="sede-notice">
+  <strong id="sede-name">—</strong>
+</div>
 
 <div class="notice">
   <strong>⚠ Requiere conexión a internet</strong>
@@ -206,8 +258,25 @@ footer{border-top:1px solid var(--border);padding-top:18px;text-align:center;fon
       <div class="tv2" id="tvval">$0</div>
     </div>
     <div class="tbox et">
-      <div><div class="tl">Efectivo a Entregar</div><div class="ts">Efectivo + parte mixto en cash</div></div>
+      <div><div class="tl">Efectivo a Entregar</div><div class="ts" id="ef-desc">Efectivo + parte mixto en cash</div></div>
       <div class="tv2" id="teval">$0</div>
+    </div>
+  </div>
+
+  <div id="gastos-sec">
+    <p class="sec">💰 Gastos del día</p>
+    <div class="gastos-box">
+      <h3>
+        <span>Registrar gastos a descontar</span>
+      </h3>
+      <div class="add-gasto-form">
+        <input type="text" id="gasto-desc" placeholder="Descripción del gasto" />
+        <input type="number" id="gasto-monto" placeholder="Monto" min="0" step="100" />
+        <button type="button" onclick="agregarGasto()">➕ Agregar</button>
+      </div>
+      <div id="gastos-list">
+        <div class="gastos-empty">Sin gastos registrados</div>
+      </div>
     </div>
   </div>
 
@@ -225,16 +294,115 @@ footer{border-top:1px solid var(--border);padding-top:18px;text-align:center;fon
 </div>
 
 <footer>Todo el procesamiento ocurre en tu navegador — ningún archivo sale de tu computadora.</footer>
-</div>
+</div><!-- Fin main-content -->
+
+</div><!-- Fin wrap -->
 
 <script>
 // ── Globals ──────────────────────────────────────────────────────────
 var invoices = [];
+var gastos = []; // {descripcion: string, monto: number}
 var today = new Date();
 var dateStr = today.toLocaleDateString('es-CO', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+var selectedSede = null; // 'nevada' o 'novena'
 
 document.getElementById('dchip').textContent = dateStr;
 document.getElementById('phdr').textContent  = 'CIERRE DE VENTAS — ' + dateStr.toUpperCase();
+
+// ── Selección de sede ────────────────────────────────────────────────
+function selectSede(sede) {
+  selectedSede = sede;
+  document.getElementById('sede-selector').style.display = 'none';
+  document.getElementById('main-content').style.display = 'block';
+  
+  var sedeName = sede === 'nevada' ? '🎫 Sede: La Nevada (Impresión térmica)' : '📄 Sede: Novena - La Paz (Impresión estándar)';
+  document.getElementById('sede-name').textContent = sedeName;
+}
+
+function changeSede() {
+  if (invoices.length > 0) {
+    if (!confirm('¿Seguro que quieres cambiar de sede? Se perderán los datos procesados.')) return;
+    invoices = [];
+    gastos = [];
+    document.getElementById('dz').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('prog').style.display = 'none';
+    document.getElementById('folder-input').value = '';
+  }
+  selectedSede = null;
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('sede-selector').style.display = 'flex';
+}
+
+// ── Gestión de gastos ───────────────────────────────────────────────
+function agregarGasto() {
+  var desc = document.getElementById('gasto-desc').value.trim();
+  var monto = parseFloat(document.getElementById('gasto-monto').value || 0);
+  
+  if (!desc || monto <= 0) {
+    alert('Ingresa una descripción y un monto válido para el gasto.');
+    return;
+  }
+  
+  gastos.push({descripcion: desc, monto: monto});
+  document.getElementById('gasto-desc').value = '';
+  document.getElementById('gasto-monto').value = '';
+  
+  actualizarGastos();
+}
+
+function eliminarGasto(index) {
+  gastos.splice(index, 1);
+  actualizarGastos();
+}
+
+function actualizarGastos() {
+  var list = document.getElementById('gastos-list');
+  
+  if (gastos.length === 0) {
+    list.innerHTML = '<div class="gastos-empty">Sin gastos registrados</div>';
+  } else {
+    var html = '';
+    gastos.forEach(function(g, i) {
+      html += '<div class="gasto-row">';
+      html += '<span class="gasto-desc">'+g.descripcion+'</span>';
+      html += '<span class="gasto-amt">'+fmt(g.monto)+'</span>';
+      html += '<button class="gasto-del" onclick="eliminarGasto('+i+')">✕</button>';
+      html += '</div>';
+    });
+    
+    var totalGastos = gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
+    html += '<div class="gastos-total">';
+    html += '<span class="lbl">Total Gastos:</span>';
+    html += '<span class="val">'+fmt(totalGastos)+'</span>';
+    html += '</div>';
+    
+    list.innerHTML = html;
+  }
+  
+  // Actualizar efectivo a entregar
+  actualizarEfectivoEntregar();
+}
+
+function actualizarEfectivoEntregar() {
+  var tE = 0;
+  invoices.forEach(function(inv) {
+    if (inv.method !== 'error' && inv.method !== 'desconocido') {
+      tE += inv.cashPart;
+    }
+  });
+  
+  var totalGastos = gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
+  var efectivoFinal = tE - totalGastos;
+  
+  document.getElementById('teval').textContent = fmt(efectivoFinal);
+  
+  if (totalGastos > 0) {
+    document.getElementById('ef-desc').textContent = 'Efectivo - Gastos del día';
+  } else {
+    document.getElementById('ef-desc').textContent = 'Efectivo + parte mixto en cash';
+  }
+}
 
 // ── PDF.js worker ────────────────────────────────────────────────────
 function initPDFjs() {
@@ -498,7 +666,12 @@ function renderResults() {
   document.getElementById('tsub').textContent   = valid.length + ' procesadas';
   document.getElementById('tvval').textContent  = fmt(tV);
   document.getElementById('tvsub').textContent  = valid.length + ' facturas procesadas';
-  document.getElementById('teval').textContent  = fmt(tE);
+  
+  // Actualizar efectivo a entregar (considerando gastos)
+  actualizarEfectivoEntregar();
+  
+  // Actualizar vista de gastos
+  actualizarGastos();
 
   // Unrecognized
   var unkSec = document.getElementById('unk');
@@ -646,6 +819,129 @@ document.getElementById('btn-csv').addEventListener('click', function() {
 document.getElementById('btn-print').addEventListener('click', function() {
   if (!invoices.length) { alert('Primero procesa una carpeta de facturas.'); return; }
 
+  if (selectedSede === 'nevada') {
+    printLaNevada();
+  } else {
+    printNovenaLaPaz();
+  }
+});
+
+// ── Impresión La Nevada (formato térmico 80mm) ───────────────────────
+function printLaNevada() {
+  var G = {efectivo:[], transferencia:[], tarjeta:[], mixto:[]};
+  var tV = 0, tE = 0;
+  invoices.forEach(function(inv) {
+    if (inv.method === 'error' || inv.method === 'desconocido') return;
+    if (G[inv.method]) G[inv.method].push(inv);
+    tV += inv.total; tE += inv.cashPart;
+  });
+  function sum(arr){ return arr.reduce(function(s,i){return s+i.total;},0); }
+  function fmtP(n){ return !n?'$ 0':'$ '+Math.round(n).toLocaleString('es-CO'); }
+
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+    +'<title>Cierre La Nevada</title>'
+    +'<style>'
+    +'*{margin:0;padding:0;box-sizing:border-box}'
+    +'body{font-family:\'Courier New\',monospace;background:white;color:#000;padding:12px 8px;max-width:80mm;margin:0 auto;font-size:12px;line-height:1.4}'
+    +'.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:8px;margin-bottom:10px}'
+    +'.hdr h1{font-size:16px;font-weight:900;margin-bottom:4px}'
+    +'.hdr .fecha{font-size:10px;color:#333}'
+    +'.sec{font-size:11px;font-weight:900;border-bottom:1px solid #000;padding:6px 0 4px 0;margin:12px 0 6px 0;text-transform:uppercase}'
+    +'.row{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px dotted #ccc}'
+    +'.row .lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+    +'.row .val{font-weight:700;margin-left:8px;white-space:nowrap}'
+    +'.subtot{display:flex;justify-content:space-between;padding:5px 0;font-size:11px;font-weight:900;margin-top:2px}'
+    +'.mixto-detail{padding-left:10px;font-size:10px;color:#555;font-style:italic;border-bottom:1px dotted #eee}'
+    +'.total-box{border:2px solid #000;padding:8px;margin:10px 0;text-align:center}'
+    +'.total-box .lbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}'
+    +'.total-box .val{font-size:18px;font-weight:900}'
+    +'.footer{text-align:center;font-size:9px;color:#666;margin-top:12px;padding-top:8px;border-top:1px dashed #999}'
+    +'@media print{'
+    +'  @page{margin:0.5cm;size:80mm auto}'
+    +'  body{padding:0;font-size:11px}'
+    +'}'
+    +'</style></head><body>'
+    +'<div class="hdr">'
+    +'  <h1>LA NEVADA</h1>'
+    +'  <div>CIERRE DE VENTAS</div>'
+    +'  <div class="fecha">'+dateStr+'</div>'
+    +'</div>';
+
+  // Resumen por método
+  html += '<div class="sec">Resumen del día</div>';
+  html += '<div class="row"><span class="lbl">Efectivo</span><span class="val">'+fmtP(sum(G.efectivo))+'</span></div>';
+  html += '<div class="row"><span class="lbl">Transferencia</span><span class="val">'+fmtP(sum(G.transferencia))+'</span></div>';
+  html += '<div class="row"><span class="lbl">Tarjeta</span><span class="val">'+fmtP(sum(G.tarjeta))+'</span></div>';
+  html += '<div class="row"><span class="lbl">Mixto</span><span class="val">'+fmtP(sum(G.mixto))+'</span></div>';
+
+  // Detalle de cada método
+  var metodos = [
+    {key:'efectivo', lbl:'Efectivo'},
+    {key:'transferencia', lbl:'Transferencia'},
+    {key:'tarjeta', lbl:'Tarjeta'},
+    {key:'mixto', lbl:'Mixto'}
+  ];
+
+  metodos.forEach(function(m) {
+    if (G[m.key].length > 0) {
+      html += '<div class="sec">'+m.lbl+' ('+G[m.key].length+')</div>';
+      G[m.key].forEach(function(inv) {
+        var shortName = inv.name.replace(/\.pdf$/i,'').substring(0,20);
+        html += '<div class="row"><span class="lbl">'+shortName+'</span><span class="val">'+fmtP(inv.total)+'</span></div>';
+        
+        // Si es mixto, mostrar desglose
+        if (m.key === 'mixto') {
+          if (inv.mixtoEf) html += '<div class="mixto-detail">Efec: '+fmtP(inv.mixtoEf)+'</div>';
+          if (inv.mixtoTr) html += '<div class="mixto-detail">Transf: '+fmtP(inv.mixtoTr)+'</div>';
+          if (inv.mixtoTa) html += '<div class="mixto-detail">Tarj: '+fmtP(inv.mixtoTa)+'</div>';
+        }
+      });
+      html += '<div class="subtot"><span>Subtotal '+m.lbl+'</span><span>'+fmtP(sum(G[m.key]))+'</span></div>';
+    }
+  });
+
+  // Totales finales
+  html += '<div class="total-box">'
+    +'<div class="lbl">Total Venta Día</div>'
+    +'<div class="val">'+fmtP(tV)+'</div>'
+    +'</div>';
+  
+  // Gastos
+  var totalGastos = gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
+  if (gastos.length > 0) {
+    html += '<div class="sec">Gastos del día</div>';
+    gastos.forEach(function(g) {
+      html += '<div class="row"><span class="lbl">'+g.descripcion+'</span><span class="val" style="color:#b00">-'+fmtP(g.monto)+'</span></div>';
+    });
+    html += '<div class="subtot"><span>Total Gastos</span><span style="color:#b00">'+fmtP(totalGastos)+'</span></div>';
+  }
+  
+  var efectivoFinal = tE - totalGastos;
+  html += '<div class="total-box" style="border-color:#b00">'
+    +'<div class="lbl">Efectivo a Entregar</div>'
+    +'<div class="val" style="color:#b00">'+fmtP(efectivoFinal)+'</div>'
+    +'</div>';
+
+  html += '<div class="footer">'
+    +'Generado: '+new Date().toLocaleString('es-CO')+'<br>'
+    +'LA NEVADA - Sistema automático'
+    +'</div>';
+
+  html += '<script>window.onload=function(){window.print();}<\/script>'
+    +'</body></html>';
+
+  var w = window.open('', '_blank');
+  if (w) {
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  } else {
+    alert('Permite ventanas emergentes para poder imprimir.');
+  }
+}
+
+// ── Impresión Novena-La Paz (formato A4) ─────────────────────────────
+function printNovenaLaPaz() {
   var G = {efectivo:[], transferencia:[], tarjeta:[], mixto:[]};
   var tV = 0, tE = 0;
   invoices.forEach(function(inv) {
@@ -722,6 +1018,12 @@ document.getElementById('btn-print').addEventListener('click', function() {
     +'.total-block .lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin-bottom:4px}'
     +'.total-block .val{font-size:22px;font-weight:900;color:#111}'
     +'.total-block.ef-cash .val{color:#b00}'
+    +'.gastos-box{border:1px solid #ccc;border-radius:8px;padding:12px;margin-top:16px;background:#f9f9f9}'
+    +'.gastos-box h4{font-size:11px;margin-bottom:8px;color:#666;text-transform:uppercase;letter-spacing:1px}'
+    +'.gasto-item{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;border-bottom:1px dotted #ddd}'
+    +'.gasto-item .desc{color:#444}'
+    +'.gasto-item .amt{font-weight:700;color:#b00}'
+    +'.gastos-total{display:flex;justify-content:space-between;padding:6px 0;margin-top:6px;font-size:12px;font-weight:900;border-top:2px solid #999}'
     +'.firma{margin-top:32px;display:flex;gap:40px}'
     +'.firma-box{flex:1;border-top:1px solid #999;padding-top:6px;font-size:10px;color:#666;text-align:center}'
     +'.footer-note{margin-top:18px;font-size:9px;color:#aaa;text-align:center}'
@@ -731,13 +1033,30 @@ document.getElementById('btn-print').addEventListener('click', function() {
     +'}'
     +'</style></head><body>'
     +'<div class="header">'
-    +'  <h1>CIERRE DE VENTAS</h1>'
+    +'  <h1>CIERRE DE VENTAS - NOVENA/LA PAZ</h1>'
     +'  <div class="fecha">'+dateStr.toUpperCase()+'<br>Generado: '+new Date().toLocaleTimeString('es-CO')+'</div>'
     +'</div>'
-    +'<table class="outer"><tr>'+colsHTML+'</tr></table>'
+    +'<table class="outer"><tr>'+colsHTML+'</tr></table>';
+  
+  // Gastos
+  var totalGastos = gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
+  var gastosHTML = '';
+  if (gastos.length > 0) {
+    gastosHTML += '<div class="gastos-box">';
+    gastosHTML += '<h4>💰 Gastos del Día</h4>';
+    gastos.forEach(function(g) {
+      gastosHTML += '<div class="gasto-item"><span class="desc">'+g.descripcion+'</span><span class="amt">-'+fmtP(g.monto)+'</span></div>';
+    });
+    gastosHTML += '<div class="gastos-total"><span>Total Gastos:</span><span style="color:#b00">'+fmtP(totalGastos)+'</span></div>';
+    gastosHTML += '</div>';
+  }
+  
+  var efectivoFinal = tE - totalGastos;
+  
+  html += gastosHTML
     +'<div class="totals-row">'
     +'  <div class="total-block"><div class="lbl">Total Venta Día</div><div class="val">'+fmtP(tV)+'</div></div>'
-    +'  <div class="total-block ef-cash"><div class="lbl">Efectivo a Entregar</div><div class="val">'+fmtP(tE)+'</div></div>'
+    +'  <div class="total-block ef-cash"><div class="lbl">Efectivo a Entregar</div><div class="val">'+fmtP(efectivoFinal)+'</div></div>'
     +'</div>'
     +'<div class="firma">'
     +'  <div class="firma-box">Elaborado por</div>'
@@ -756,10 +1075,11 @@ document.getElementById('btn-print').addEventListener('click', function() {
   } else {
     alert('Opera bloqueó la ventana emergente. Permite ventanas emergentes para este archivo e intenta de nuevo.');
   }
-});
+}
 
 document.getElementById('btn-reset').addEventListener('click', function() {
   invoices = [];
+  gastos = [];
   dz.style.display = 'block';
   document.getElementById('results').style.display = 'none';
   document.getElementById('prog').style.display = 'none';
