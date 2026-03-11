@@ -691,7 +691,7 @@ function renderResults() {
     if (inv.method === 'error') return;
     if (inv.method === 'desconocido') { unk.push(inv); return; }
     
-    // Si es parte de un mixto desglosado, agrupar por nombre original
+    // Si es parte de un mixto desglosado, agregar a su método Y agrupar para tracking
     if (inv.isMixtoPart) {
       var originalName = inv.name.replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)/, '');
       if (!mixtosDesglosados[originalName]) {
@@ -699,6 +699,9 @@ function renderResults() {
       }
       mixtosDesglosados[originalName][inv.method] += inv.total;
       mixtosDesglosados[originalName].total += inv.total;
+      
+      // IMPORTANTE: Agregar al grupo del método correspondiente para que se sume
+      if (G[inv.method]) G[inv.method].push(inv);
     } else {
       // Facturas normales
       if (G[inv.method]) G[inv.method].push(inv);
@@ -709,8 +712,10 @@ function renderResults() {
   });
 
   function sum(arr) { return arr.reduce(function(s,i) { return s+i.total; }, 0); }
+  function countPuras(arr) { return arr.filter(function(i) { return !i.isMixtoPart; }).length; }
+  function countMixtas(arr) { return arr.filter(function(i) { return i.isMixtoPart; }).length; }
 
-  // Calcular total de mixtos (desglosados + sin desglosar)
+  // Calcular total de mixtos (solo los que NO fueron desglosados)
   var totalMixtosDesglosados = 0;
   var cantMixtosDesglosados = 0;
   for (var nomMixto in mixtosDesglosados) {
@@ -718,19 +723,25 @@ function renderResults() {
     cantMixtosDesglosados++;
   }
 
-  // Cards
+  // Cards - Los totales ahora incluyen los montos de mixtos desglosados
+  var efPuras = countPuras(G.efectivo);
+  var efMixtas = countMixtas(G.efectivo);
   document.getElementById('s-ef').textContent = fmt(sum(G.efectivo));
-  document.getElementById('n-ef').textContent = G.efectivo.length + ' factura(s)';
-  document.getElementById('s-tr').textContent = fmt(sum(G.transferencia));
-  document.getElementById('n-tr').textContent = G.transferencia.length + ' factura(s)';
-  document.getElementById('s-ta').textContent = fmt(sum(G.tarjeta));
-  document.getElementById('n-ta').textContent = G.tarjeta.length + ' factura(s)';
+  document.getElementById('n-ef').textContent = efPuras + ' pura(s)' + (efMixtas > 0 ? ' + ' + efMixtas + ' de mixto' : '');
   
-  // Card de mixto: incluir desglosados + sin desglosar
-  var totalMixtos = sum(G.mixto) + totalMixtosDesglosados;
-  var cantMixtos = G.mixto.length + cantMixtosDesglosados;
-  document.getElementById('s-mx').textContent = fmt(totalMixtos);
-  document.getElementById('n-mx').textContent = cantMixtos + ' factura(s)';
+  var trPuras = countPuras(G.transferencia);
+  var trMixtas = countMixtas(G.transferencia);
+  document.getElementById('s-tr').textContent = fmt(sum(G.transferencia));
+  document.getElementById('n-tr').textContent = trPuras + ' pura(s)' + (trMixtas > 0 ? ' + ' + trMixtas + ' de mixto' : '');
+  
+  var taPuras = countPuras(G.tarjeta);
+  var taMixtas = countMixtas(G.tarjeta);
+  document.getElementById('s-ta').textContent = fmt(sum(G.tarjeta));
+  document.getElementById('n-ta').textContent = taPuras + ' pura(s)' + (taMixtas > 0 ? ' + ' + taMixtas + ' de mixto' : '');
+  
+  // Card de mixto: solo los que NO fueron desglosados
+  document.getElementById('s-mx').textContent = fmt(sum(G.mixto));
+  document.getElementById('n-mx').textContent = G.mixto.length + ' sin desglosar' + (cantMixtosDesglosados > 0 ? ' (' + cantMixtosDesglosados + ' desglosado(s))' : '');
 
   // Column grid
   var CDEFS = [
@@ -850,6 +861,7 @@ function buildTXT() {
   var tV = 0, tE = 0;
   invoices.forEach(function(inv) {
     if (inv.method === 'error' || inv.method === 'desconocido') return;
+    // Agregar todas las facturas a sus métodos (incluyendo partes de mixtos)
     if (G[inv.method]) G[inv.method].push(inv);
     tV += inv.total; tE += inv.cashPart;
   });
@@ -968,7 +980,7 @@ function printLaNevada() {
   invoices.forEach(function(inv) {
     if (inv.method === 'error' || inv.method === 'desconocido') return;
     
-    // Si es parte de un mixto desglosado, agrupar por nombre original
+    // Si es parte de un mixto desglosado, agrupar Y agregar al método
     if (inv.isMixtoPart) {
       // Extraer el nombre original (antes del sufijo " (Efectivo)", etc)
       var originalName = inv.name.replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)/, '');
@@ -977,6 +989,9 @@ function printLaNevada() {
       }
       mixtosDesglosados[originalName][inv.method] += inv.total;
       mixtosDesglosados[originalName].total += inv.total;
+      
+      // IMPORTANTE: Agregar al grupo del método para que se sume
+      if (G[inv.method]) G[inv.method].push(inv);
     } else {
       // Facturas normales (no mixtas)
       if (G[inv.method]) G[inv.method].push(inv);
@@ -1021,7 +1036,7 @@ function printLaNevada() {
     +'  <div class="fecha">'+dateStr+'</div>'
     +'</div>';
 
-  // Resumen por método - calcular totales incluyendo mixtos desglosados
+  // Resumen por método - Los totales de efectivo, transferencia y tarjeta YA incluyen las partes de mixtos desglosados
   var totalMixtosDesglosados = 0;
   for (var nomMixto in mixtosDesglosados) {
     totalMixtosDesglosados += mixtosDesglosados[nomMixto].total;
@@ -1032,10 +1047,10 @@ function printLaNevada() {
   html += '<div class="row"><span class="lbl">Transferencia</span><span class="val">'+fmtP(sum(G.transferencia))+'</span></div>';
   html += '<div class="row"><span class="lbl">Tarjeta</span><span class="val">'+fmtP(sum(G.tarjeta))+'</span></div>';
   
-  // Mostrar mixtos (desglosados + sin desglosar)
-  var totalMixtos = sum(G.mixto) + totalMixtosDesglosados;
-  var cantMixtos = G.mixto.length + Object.keys(mixtosDesglosados).length;
-  html += '<div class="row"><span class="lbl">Mixto</span><span class="val">'+fmtP(totalMixtos)+'</span></div>';
+  // Mixtos: solo los que NO fueron desglosados
+  if (G.mixto.length > 0) {
+    html += '<div class="row"><span class="lbl">Mixto (sin desglosar)</span><span class="val">'+fmtP(sum(G.mixto))+'</span></div>';
+  }
 
   // Solo desglose de transferencias
   if (G.transferencia.length > 0) {
@@ -1062,10 +1077,11 @@ function printLaNevada() {
     html += '<div class="factura-item">'+G.tarjeta.length+' factura(s) - Total: '+fmtP(sum(G.tarjeta))+'</div>';
   }
   
-  // Mostrar mixtos desglosados
+  // Mostrar mixtos desglosados (información adicional)
   var numMixtosDesglosados = Object.keys(mixtosDesglosados).length;
   if (numMixtosDesglosados > 0) {
-    html += '<div class="sec">Mixtos Desglosados ('+numMixtosDesglosados+')</div>';
+    html += '<div class="sec">📊 Desglose de Mixtos ('+numMixtosDesglosados+')</div>';
+    html += '<div class="mixto-detail" style="text-align:center;padding:4px 0;margin-bottom:4px">Los montos ya están sumados arriba ↑</div>';
     for (var nomMixto in mixtosDesglosados) {
       var mx = mixtosDesglosados[nomMixto];
       var shortName = nomMixto.replace(/\.pdf$/i,'').substring(0,25);
@@ -1082,7 +1098,6 @@ function printLaNevada() {
         html += '<div class="mixto-detail">→ Tarjeta: '+fmtP(mx.tarjeta)+'</div>';
       }
     }
-    html += '<div class="subtot"><span>Subtotal Mixtos</span><span>'+fmtP(totalMixtosDesglosados)+'</span></div>';
   }
   
   // Mostrar mixtos sin desglosar (si los hay)
@@ -1170,7 +1185,8 @@ function printNovenaLaPaz() {
     {key:'mixto',         lbl:'MIXTO',          color:'#5a2a8a'}
   ];
 
-  // Determinar columnas activas (incluyendo mixtos desglosados)
+  // Determinar columnas activas
+  // NOTA: Los mixtos desglosados ya están sumados en efectivo, transferencia y tarjeta
   var numMixtosDesglosados = Object.keys(mixtosDesglosados).length;
   var totalMixtosDesglosados = 0;
   for (var nomMixto in mixtosDesglosados) {
@@ -1178,8 +1194,9 @@ function printNovenaLaPaz() {
   }
   
   var activeCols = COLS.filter(function(cd){ 
+    // Solo mostrar columna de mixto si hay mixtos sin desglosar
     if (cd.key === 'mixto') {
-      return G[cd.key].length > 0 || numMixtosDesglosados > 0;
+      return G[cd.key].length > 0;
     }
     return G[cd.key].length > 0; 
   });
@@ -1190,27 +1207,12 @@ function printNovenaLaPaz() {
     var list = G[cd.key];
     var rows = '';
 
-    // Solo mostrar desglose para transferencias y mixtos
+    // Solo mostrar desglose para transferencias
     if (cd.key === 'transferencia') {
       list.forEach(function(inv) {
         rows += '<tr><td class="amt">'+fmtP(inv.total)+'</td></tr>';
       });
     } else if (cd.key === 'mixto') {
-      // Mostrar mixtos desglosados con su breakdown
-      for (var nomMixto in mixtosDesglosados) {
-        var mx = mixtosDesglosados[nomMixto];
-        rows += '<tr><td class="amt">'+fmtP(mx.total)+'</td></tr>';
-        if (mx.efectivo > 0) {
-          rows += '<tr><td class="mixto-sub">E: '+fmtP(mx.efectivo)+'</td></tr>';
-        }
-        if (mx.transferencia > 0) {
-          rows += '<tr><td class="mixto-sub">Tr: '+fmtP(mx.transferencia)+'</td></tr>';
-        }
-        if (mx.tarjeta > 0) {
-          rows += '<tr><td class="mixto-sub">T: '+fmtP(mx.tarjeta)+'</td></tr>';
-        }
-        rows += '<tr><td class="mixto-sep"></td></tr>';
-      }
       // Mixtos sin desglosar
       list.forEach(function(inv) {
         rows += '<tr><td class="amt">'+fmtP(inv.total)+'</td></tr>';
@@ -1220,11 +1222,8 @@ function printNovenaLaPaz() {
       rows += '<tr><td class="resumen">'+list.length+' factura(s)</td></tr>';
     }
 
-    // Calcular total de la columna (para mixto incluir desglosados)
+    // Total de la columna (sin duplicar mixtos desglosados que ya están en otros métodos)
     var colTotal = sum(list);
-    if (cd.key === 'mixto') {
-      colTotal += totalMixtosDesglosados;
-    }
 
     colsHTML += '<td class="col-wrap" style="width:'+colPct+'">'
       +'<table class="col-tbl">'
@@ -1279,6 +1278,31 @@ function printNovenaLaPaz() {
     +'</div>'
     +'<table class="outer"><tr>'+colsHTML+'</tr></table>';
   
+  // Mostrar desglose de mixtos (información adicional)
+  var mixtosHTML = '';
+  if (numMixtosDesglosados > 0) {
+    mixtosHTML += '<div style="border:1px solid #000;border-radius:6px;padding:10px;margin-top:12px;background:#f0f0f0">';
+    mixtosHTML += '<h4 style="font-size:9px;margin-bottom:6px;color:#000;text-transform:uppercase;letter-spacing:0.8px;font-weight:bold">📊 DESGLOSE DE MIXTOS ('+numMixtosDesglosados+' factura(s))</h4>';
+    mixtosHTML += '<p style="font-size:8px;color:#000;margin-bottom:8px;font-weight:bold">Los montos ya están incluidos en Efectivo, Transferencia y Tarjeta arriba</p>';
+    for (var nomMixto in mixtosDesglosados) {
+      var mx = mixtosDesglosados[nomMixto];
+      var shortName = nomMixto.replace(/\.pdf$/i,'');
+      mixtosHTML += '<div style="padding:5px 0;border-bottom:1px solid #ccc">';
+      mixtosHTML += '<div style="font-size:9px;font-weight:bold;color:#000">'+shortName+' - Total: '+fmtP(mx.total)+'</div>';
+      if (mx.efectivo > 0) {
+        mixtosHTML += '<div style="font-size:8px;padding-left:10px;color:#000">→ Efectivo: '+fmtP(mx.efectivo)+'</div>';
+      }
+      if (mx.transferencia > 0) {
+        mixtosHTML += '<div style="font-size:8px;padding-left:10px;color:#000">→ Transferencia: '+fmtP(mx.transferencia)+'</div>';
+      }
+      if (mx.tarjeta > 0) {
+        mixtosHTML += '<div style="font-size:8px;padding-left:10px;color:#000">→ Tarjeta: '+fmtP(mx.tarjeta)+'</div>';
+      }
+      mixtosHTML += '</div>';
+    }
+    mixtosHTML += '</div>';
+  }
+  
   // Gastos
   var totalGastos = gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
   var gastosHTML = '';
@@ -1294,7 +1318,8 @@ function printNovenaLaPaz() {
   
   var efectivoFinal = tV - tTransf - totalGastos;
   
-  html += gastosHTML
+  html += mixtosHTML
+    + gastosHTML
     +'<div class="totals-row">'
     +'  <div class="total-block"><div class="lbl">Total Venta Día</div><div class="val">'+fmtP(tV)+'</div></div>'
     +'  <div class="total-block ef-cash"><div class="lbl">Efectivo a Entregar</div><div class="val">'+fmtP(efectivoFinal)+'</div><div style="font-size:7px;color:#000;font-weight:bold;margin-top:2px">Venta - Transf - Gastos</div></div>'
