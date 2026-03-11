@@ -491,7 +491,7 @@ function readPDF(file) {
 function detectMethod(text) {
   var t = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   var P = {
-    mixto:        [/mixto/,/efectivo.{0,20}transf/,/transf.{0,20}efectivo/,/parte.{0,20}efectivo/],
+    mixto:        [/mixto/,/ixto/,/\bxto\b/,/efectivo.{0,20}transf/,/transf.{0,20}efectivo/,/parte.{0,20}efectivo/,/e\s*[:=]\s*[\d]/,/tr\s*[:=]\s*[\d]/],
     efectivo:     [/efectivo/,/\bcash\b/,/\bcontado\b/],
     transferencia:[/transferencia/,/\btransf\b/,/deposito/,/\bpse\b/,/nequi/,/daviplata/,/bancolombia/],
     tarjeta:      [/tarjeta/,/credito/,/debito/,/\bvisa\b/,/mastercard/,/datafono/,/\bpos\b/]
@@ -584,14 +584,22 @@ function processFiles(files) {
       if (method === 'mixto') {
         var txtLower = text.toLowerCase();
         
+        // Detectar si es texto corrupto
+        var hasCorruptText = /ixto|xto\b/.test(txtLower);
+        if (hasCorruptText) {
+          console.warn('⚠️ TEXTO CORRUPTO DETECTADO en ' + f.name + ' (ixto/xto)');
+        }
+        
         console.log('═══ PROCESANDO MIXTO:', f.name, '═══');
         console.log('Texto completo del PDF:', text.substring(0, 500));
         
-        // Intentar extraer efectivo con varios patrones: "E:", "Efectivo:", "efectivo"
+        // Intentar extraer efectivo con varios patrones más flexibles
+        // Buscar: E:, E =, Efectivo:, (E), etc.
         var mEf = text.match(/\be\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
                   text.match(/efectivo\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
                   text.match(/efec\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
-                  text.match(/\(e\)\s*\$?\s*([\d.,]+)/i);
+                  text.match(/\(e\)\s*\$?\s*([\d.,]+)/i) ||
+                  text.match(/\be[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
         if (mEf) { 
           var vEf = parseFloat(mEf[1].replace(/\./g,'').replace(',','.')); 
           if (!isNaN(vEf) && vEf > 0) {
@@ -600,10 +608,11 @@ function processFiles(files) {
           }
         }
         
-        // Extraer transferencia con patrones: "Tr:", "Trans:", "Transferencia"
+        // Extraer transferencia con patrones más flexibles
         var mTr = text.match(/\btr\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
                   text.match(/trans(?:f|ferencia)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-                  text.match(/\(tr\)\s*\$?\s*([\d.,]+)/i);
+                  text.match(/\(tr\)\s*\$?\s*([\d.,]+)/i) ||
+                  text.match(/\btr[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
         if (mTr) { 
           var vTr = parseFloat(mTr[1].replace(/\./g,'').replace(',','.')); 
           if (!isNaN(vTr) && vTr > 0) {
@@ -612,14 +621,12 @@ function processFiles(files) {
           }
         }
         
-        // Extraer tarjeta con patrones: "T:", "Tarj:", "Tarjeta" (pero evitar "Tr:")
-        // Buscar específicamente "T:" sin la r
-        var mTa = null;
-        // Primero buscar "T:" sin que sea "Tr:"
+        // Extraer tarjeta - más cuidadoso para no confundir con Tr
         var tMatch = text.match(/[^r]\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
                      text.match(/^\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
                      text.match(/tarj(?:eta)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-                     text.match(/\(t\)\s*\$?\s*([\d.,]+)/i);
+                     text.match(/\(t\)\s*\$?\s*([\d.,]+)/i) ||
+                     text.match(/\nt[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
         if (tMatch) { 
           var vTa = parseFloat(tMatch[1].replace(/\./g,'').replace(',','.')); 
           if (!isNaN(vTa) && vTa > 0) {
