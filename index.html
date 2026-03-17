@@ -276,7 +276,7 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
         <strong>Editar facturas leídas</strong>
         <span id="edit-count">0 factura(s) cargada(s)</span>
       </div>
-      <div class="edit-note">Si la caja marcó un método distinto al que realmente usó el cliente, cámbialo aquí y el resumen, las exportaciones y la impresión se actualizan.</div>
+      <div class="edit-note">Si la caja marcó un método distinto al que realmente usó el cliente, cámbialo aquí y el resumen, las exportaciones y la impresión se actualizan. Si eliges mixto, al guardar se pedirá el desglose.</div>
       <div class="edit-list" id="edit-list">
         <div class="edit-empty">Las facturas procesadas aparecerán aquí.</div>
       </div>
@@ -536,6 +536,99 @@ function getEditableMethods(inv) {
   return methods;
 }
 
+function parseMoneyInput(value) {
+  if (value === null || value === undefined) return NaN;
+  if (typeof value === 'number') return value;
+
+  var cleaned = String(value).trim().replace(/\$/g, '').replace(/\s+/g, '');
+  if (!cleaned) return 0;
+
+  var parsed = parseFloat(cleaned.replace(/\./g, '').replace(',', '.'));
+  return isNaN(parsed) ? NaN : parsed;
+}
+
+function requestMixtoBreakdown(total, current) {
+  var defaults = current || {};
+  var efRaw = prompt('Pago mixto\nTotal de la factura: ' + fmt(total) + '\n\nIngresa cuanto fue en efectivo:', defaults.efectivo ? String(defaults.efectivo) : '');
+  if (efRaw === null) return null;
+
+  var trRaw = prompt('Pago mixto\nTotal de la factura: ' + fmt(total) + '\n\nIngresa cuanto fue por transferencia:', defaults.transferencia ? String(defaults.transferencia) : '');
+  if (trRaw === null) return null;
+
+  var taRaw = prompt('Pago mixto\nTotal de la factura: ' + fmt(total) + '\n\nIngresa cuanto fue por tarjeta:', defaults.tarjeta ? String(defaults.tarjeta) : '');
+  if (taRaw === null) return null;
+
+  var breakdown = {
+    efectivo: parseMoneyInput(efRaw),
+    transferencia: parseMoneyInput(trRaw),
+    tarjeta: parseMoneyInput(taRaw)
+  };
+  var keys = ['efectivo', 'transferencia', 'tarjeta'];
+
+  for (var i = 0; i < keys.length; i++) {
+    var amount = breakdown[keys[i]];
+    if (isNaN(amount) || amount < 0) {
+      alert('Los valores del pago mixto deben ser numeros validos y no pueden ser negativos.');
+      return null;
+    }
+  }
+
+  var positiveCount = keys.filter(function(key) { return breakdown[key] > 0; }).length;
+  var sum = breakdown.efectivo + breakdown.transferencia + breakdown.tarjeta;
+
+  if (positiveCount < 2) {
+    alert('Un pago mixto debe repartirse en al menos dos metodos de pago.');
+    return null;
+  }
+
+  if (Math.abs(sum - total) > 0.01) {
+    alert('La suma del pago mixto debe coincidir con el total de la factura: ' + fmt(total));
+    return null;
+  }
+
+  return breakdown;
+}
+
+function buildInvoiceRecord(baseName, method, total) {
+  return normalizeInvoice({
+    name: baseName,
+    baseName: baseName,
+    method: method,
+    total: total,
+    cashPart: method === 'efectivo' ? total : 0,
+    mixtoEf: 0,
+    mixtoTr: 0,
+    mixtoTa: 0,
+    isMixtoPart: false
+  });
+}
+
+function buildMixtoPartInvoices(baseName, breakdown) {
+  var defs = [
+    {method: 'efectivo', label: 'Efectivo'},
+    {method: 'transferencia', label: 'Transferencia'},
+    {method: 'tarjeta', label: 'Tarjeta'}
+  ];
+
+  return defs.reduce(function(parts, def) {
+    var amount = breakdown[def.method] || 0;
+    if (amount > 0) {
+      parts.push(normalizeInvoice({
+        name: baseName + ' (' + def.label + ')',
+        baseName: baseName,
+        method: def.method,
+        total: amount,
+        cashPart: def.method === 'efectivo' ? amount : 0,
+        mixtoEf: 0,
+        mixtoTr: 0,
+        mixtoTa: 0,
+        isMixtoPart: true
+      }));
+    }
+    return parts;
+  }, []);
+}
+
 function renderInvoiceEditor() {
   var list = document.getElementById('edit-list');
   var count = document.getElementById('edit-count');
@@ -600,6 +693,20 @@ function applyInvoiceMethodChange(index) {
     return;
   }
 
+  if (newMethod === 'mixto' && !inv.isMixtoPart) {
+    var breakdown = requestMixtoBreakdown(inv.total, {
+      efectivo: inv.mixtoEf,
+      transferencia: inv.mixtoTr,
+      tarjeta: inv.mixtoTa
+    });
+    if (!breakdown) return;
+
+    var parts = buildMixtoPartInvoices(inv.baseName || inv.name, breakdown);
+    Array.prototype.splice.apply(invoices, [index, 1].concat(parts));
+    renderResults();
+    return;
+  }
+
   if (inv.method === newMethod) return;
 
   inv.method = newMethod;
@@ -608,10 +715,6 @@ function applyInvoiceMethodChange(index) {
     inv.mixtoEf = 0;
     inv.mixtoTr = 0;
     inv.mixtoTa = 0;
-  }
-
-  if (!inv.isMixtoPart && newMethod === 'mixto' && !inv.mixtoEf && !inv.mixtoTr && !inv.mixtoTa) {
-    inv.cashPart = inv.total;
   }
 
   normalizeInvoice(inv);
@@ -1026,6 +1129,12 @@ function addManual(name) {
   var amt = parseFloat((document.getElementById('a-'+name)||{}).value || 0);
   var met = (document.getElementById('m-'+name)||{}).value;
   if (!amt || !met) { alert('Ingresa monto y método de pago.'); return; }
+
+  var breakdown = null;
+  if (met === 'mixto') {
+    breakdown = requestMixtoBreakdown(amt);
+    if (!breakdown) return;
+  }
   
   // Buscar y eliminar la factura desconocida
   var invIndex = -1;
@@ -1037,16 +1146,10 @@ function addManual(name) {
   }
   
   if (invIndex >= 0) {
-    // Eliminar la factura desconocida
-    invoices.splice(invIndex, 1);
-    
-    // Si es mixto, pedir desglose (en el futuro se podría mejorar con campos adicionales)
     if (met === 'mixto') {
-      // Por ahora, agregar como mixto sin desglosar
-      invoices.push({name: name, method: met, total: amt, cashPart: amt, mixtoEf: 0, mixtoTr: 0, mixtoTa: 0});
+      Array.prototype.splice.apply(invoices, [invIndex, 1].concat(buildMixtoPartInvoices(name, breakdown)));
     } else {
-      // Agregar con el método seleccionado
-      invoices.push({name: name, method: met, total: amt, cashPart: (met==='efectivo') ? amt : 0, mixtoEf: 0, mixtoTr: 0, mixtoTa: 0});
+      invoices.splice(invIndex, 1, buildInvoiceRecord(name, met, amt));
     }
   }
   
