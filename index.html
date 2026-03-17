@@ -120,6 +120,24 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .gastos-total .val{color:var(--teal);font-size:13px}
 .gastos-empty{color:#000;font-weight:bold;font-style:italic;font-size:9px;text-align:center;padding:6px}
 
+/* EDIT INVOICES */
+#edit-sec{margin-bottom:16px}
+.edit-box{background:rgba(170,238,102,.05);border:1px solid rgba(170,238,102,.18);border-radius:6px;padding:12px}
+.edit-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.edit-head strong{font-size:11px;color:var(--green);margin:0;font-family:'Syne',sans-serif}
+.edit-head span{font-size:9px;color:#000;font-weight:bold}
+.edit-note{font-size:9px;color:#000;font-weight:bold;line-height:1.5;margin-bottom:10px}
+.edit-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;padding-right:4px}
+.edit-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(170,238,102,.08)}
+.edit-row:last-child{border-bottom:none}
+.edit-main{min-width:0;flex:1}
+.edit-name{font-size:10px;color:var(--text);font-weight:700;word-break:break-word}
+.edit-meta{font-size:9px;color:#000;font-weight:bold;margin-top:3px}
+.edit-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.edit-select{background:var(--surface);border:1px solid rgba(170,238,102,.25);color:var(--text);padding:5px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;outline:none;min-width:140px}
+.edit-save{padding:5px 10px;background:rgba(170,238,102,.14);color:var(--green);border:1px solid rgba(170,238,102,.28);border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;font-weight:700}
+.edit-empty{color:#000;font-weight:bold;font-style:italic;font-size:9px;text-align:center;padding:6px}
+
 /* UNRECOGNIZED */
 #unk{display:none;margin-bottom:16px}
 .wb{background:rgba(238,200,102,.05);border:1px solid rgba(238,200,102,.18);border-radius:6px;padding:12px}
@@ -251,6 +269,20 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
     <div class="cols" id="cols"></div>
   </div>
 
+  <div id="edit-sec">
+    <p class="sec">Corregir método de pago</p>
+    <div class="edit-box">
+      <div class="edit-head">
+        <strong>Editar facturas leídas</strong>
+        <span id="edit-count">0 factura(s) cargada(s)</span>
+      </div>
+      <div class="edit-note">Si la caja marcó un método distinto al que realmente usó el cliente, cámbialo aquí y el resumen, las exportaciones y la impresión se actualizan.</div>
+      <div class="edit-list" id="edit-list">
+        <div class="edit-empty">Las facturas procesadas aparecerán aquí.</div>
+      </div>
+    </div>
+  </div>
+
   <div class="totals">
     <div class="tbox vt">
       <div><div class="tl">Total Venta del Día</div><div class="ts" id="tvsub">—</div></div>
@@ -304,6 +336,19 @@ var gastos = []; // {descripcion: string, monto: number}
 var today = new Date();
 var dateStr = today.toLocaleDateString('es-CO', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
 var selectedSede = null; // 'nevada' o 'novena'
+var PAYMENT_METHODS = ['efectivo', 'transferencia', 'tarjeta', 'mixto'];
+var PAYMENT_LABELS = {
+  efectivo: 'Efectivo',
+  transferencia: 'Transferencia',
+  tarjeta: 'Tarjeta',
+  mixto: 'Mixto',
+  desconocido: 'Sin detectar'
+};
+var MIXTO_PART_LABELS = {
+  efectivo: 'Efectivo',
+  transferencia: 'Transferencia',
+  tarjeta: 'Tarjeta'
+};
 
 document.getElementById('dchip').textContent = dateStr;
 document.getElementById('phdr').textContent  = 'CIERRE DE VENTAS — ' + dateStr.toUpperCase();
@@ -384,27 +429,15 @@ function actualizarGastos() {
 }
 
 function actualizarEfectivoEntregar() {
-  var tV = 0; // Total venta
-  var tTransf = 0; // Total transferencias
-  
-  invoices.forEach(function(inv) {
-    if (inv.method !== 'error' && inv.method !== 'desconocido') {
-      tV += inv.total;
-      if (inv.method === 'transferencia') {
-        tTransf += inv.total;
-      }
-    }
-  });
-  
-  var totalGastos = gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
-  var efectivoFinal = tV - tTransf - totalGastos;
+  var totalGastos = getTotalGastos();
+  var efectivoFinal = getNetCashToDeliver();
   
   document.getElementById('teval').textContent = fmt(efectivoFinal);
   
   if (totalGastos > 0) {
-    document.getElementById('ef-desc').textContent = 'Total venta - Transferencias - Gastos';
+    document.getElementById('ef-desc').textContent = 'Segun metodos corregidos - Gastos';
   } else {
-    document.getElementById('ef-desc').textContent = 'Total venta - Transferencias';
+    document.getElementById('ef-desc').textContent = 'Segun metodos corregidos';
   }
 }
 
@@ -421,6 +454,168 @@ function initPDFjs() {
 function fmt(n) {
   if (!n || isNaN(n)) return '$\u00A00';
   return '$\u00A0' + Math.round(n).toLocaleString('es-CO');
+}
+
+function getMethodLabel(method) {
+  return PAYMENT_LABELS[method] || method || 'Sin detectar';
+}
+
+function escapeHTML(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeInvoice(inv) {
+  if (!inv) return null;
+
+  if (typeof inv.total !== 'number' || isNaN(inv.total)) inv.total = 0;
+  if (typeof inv.cashPart !== 'number' || isNaN(inv.cashPart)) inv.cashPart = 0;
+  if (!inv.baseName) {
+    inv.baseName = inv.isMixtoPart
+      ? String(inv.name || '').replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)$/, '')
+      : String(inv.name || '');
+  }
+
+  inv.mixtoEf = Number(inv.mixtoEf) || 0;
+  inv.mixtoTr = Number(inv.mixtoTr) || 0;
+  inv.mixtoTa = Number(inv.mixtoTa) || 0;
+
+  if (inv.method === 'efectivo') {
+    inv.cashPart = inv.total;
+  } else if (inv.method === 'transferencia' || inv.method === 'tarjeta') {
+    inv.cashPart = 0;
+  } else if (inv.method === 'mixto') {
+    if (inv.mixtoEf > 0 || inv.mixtoTr > 0 || inv.mixtoTa > 0) {
+      inv.cashPart = inv.mixtoEf;
+    } else if (inv.cashPart <= 0) {
+      inv.cashPart = inv.total;
+    }
+  } else {
+    inv.cashPart = 0;
+  }
+
+  if (inv.isMixtoPart) {
+    var suffix = MIXTO_PART_LABELS[inv.method];
+    inv.name = suffix ? inv.baseName + ' (' + suffix + ')' : inv.baseName;
+  } else {
+    inv.name = inv.baseName;
+  }
+
+  return inv;
+}
+
+function normalizeInvoices() {
+  invoices.forEach(function(inv) {
+    normalizeInvoice(inv);
+  });
+}
+
+function getTotalGastos() {
+  return gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
+}
+
+function getCashTotal() {
+  normalizeInvoices();
+  return invoices.reduce(function(sum, inv) {
+    if (inv.method === 'error' || inv.method === 'desconocido') return sum;
+    return sum + (Number(inv.cashPart) || 0);
+  }, 0);
+}
+
+function getNetCashToDeliver() {
+  return getCashTotal() - getTotalGastos();
+}
+
+function getEditableMethods(inv) {
+  var methods = inv && inv.isMixtoPart ? ['efectivo', 'transferencia', 'tarjeta'] : PAYMENT_METHODS.slice();
+  if (inv && methods.indexOf(inv.method) === -1) methods.unshift(inv.method);
+  return methods;
+}
+
+function renderInvoiceEditor() {
+  var list = document.getElementById('edit-list');
+  var count = document.getElementById('edit-count');
+  if (!list || !count) return;
+
+  normalizeInvoices();
+
+  var editableInvoices = invoices.reduce(function(acc, inv, index) {
+    if (inv.method !== 'error') {
+      acc.push({invoice: inv, index: index});
+    }
+    return acc;
+  }, []);
+
+  count.textContent = editableInvoices.length + ' factura(s) cargada(s)';
+
+  if (!editableInvoices.length) {
+    list.innerHTML = '<div class="edit-empty">Las facturas procesadas apareceran aqui.</div>';
+    return;
+  }
+
+  var html = '';
+  editableInvoices.forEach(function(item) {
+    var inv = item.invoice;
+    var invoiceIndex = item.index;
+    var options = getEditableMethods(inv).map(function(method) {
+      return '<option value="' + method + '"' + (method === inv.method ? ' selected' : '') + '>'
+        + escapeHTML(getMethodLabel(method))
+        + '</option>';
+    }).join('');
+
+    html += '<div class="edit-row">';
+    html += '  <div class="edit-main">';
+    html += '    <div class="edit-name">' + escapeHTML(inv.name) + '</div>';
+    html += '    <div class="edit-meta">Metodo actual: ' + escapeHTML(getMethodLabel(inv.method)) + ' | Total: ' + escapeHTML(fmt(inv.total)) + (inv.isMixtoPart ? ' | Parte de mixto' : '') + '</div>';
+    html += '  </div>';
+    html += '  <div class="edit-actions">';
+    html += '    <select class="edit-select" id="edit-method-' + invoiceIndex + '">' + options + '</select>';
+    html += '    <button class="edit-save" type="button" onclick="applyInvoiceMethodChange(' + invoiceIndex + ')">Guardar</button>';
+    html += '  </div>';
+    html += '</div>';
+  });
+
+  list.innerHTML = html;
+}
+
+function applyInvoiceMethodChange(index) {
+  normalizeInvoices();
+
+  var inv = invoices[index];
+  var select = document.getElementById('edit-method-' + index);
+  if (!inv || !select) return;
+
+  var newMethod = select.value;
+  if (!newMethod) {
+    alert('Selecciona un metodo de pago.');
+    return;
+  }
+
+  if (getEditableMethods(inv).indexOf(newMethod) === -1) {
+    alert('Ese metodo no aplica para esta factura.');
+    return;
+  }
+
+  if (inv.method === newMethod) return;
+
+  inv.method = newMethod;
+
+  if (!inv.isMixtoPart && newMethod !== 'mixto') {
+    inv.mixtoEf = 0;
+    inv.mixtoTr = 0;
+    inv.mixtoTa = 0;
+  }
+
+  if (!inv.isMixtoPart && newMethod === 'mixto' && !inv.mixtoEf && !inv.mixtoTr && !inv.mixtoTa) {
+    inv.cashPart = inv.total;
+  }
+
+  normalizeInvoice(inv);
+  renderResults();
 }
 
 // ── BUTTON: Select folder ────────────────────────────────────────────
@@ -680,6 +875,8 @@ function processFiles(files) {
 
 // ── Render results ───────────────────────────────────────────────────
 function renderResults() {
+  normalizeInvoices();
+
   document.getElementById('prog').style.display = 'none';
   document.getElementById('results').style.display = 'block';
 
@@ -796,6 +993,9 @@ function renderResults() {
   // Actualizar vista de gastos
   actualizarGastos();
 
+  // Editor manual de metodos
+  renderInvoiceEditor();
+
   // Unrecognized
   var unkSec = document.getElementById('unk');
   if (unk.length) {
@@ -857,6 +1057,8 @@ function addManual(name) {
 
 // ── Build TXT ────────────────────────────────────────────────────────
 function buildTXT() {
+  normalizeInvoices();
+
   var G = {efectivo:[], transferencia:[], tarjeta:[], mixto:[]};
   var tV = 0, tE = 0;
   invoices.forEach(function(inv) {
@@ -870,6 +1072,8 @@ function buildTXT() {
   function pr(s,n){ s=String(s); while(s.length<n) s=' '+s; return s; }
   function plain(n){ return !n?'0':Math.round(n).toLocaleString('es-CO'); }
   function sum(arr){ return arr.reduce(function(s,i){return s+i.total;},0); }
+  var totalGastos = getTotalGastos();
+  var efectivoFinal = tE - totalGastos;
   var W=72, S='='.repeat(W), S2='-'.repeat(W);
 
   var t = S+'\n  CIERRE DE VENTAS DIARIO\n  '+dateStr.toUpperCase()+'\n'+S+'\n\n';
@@ -878,7 +1082,7 @@ function buildTXT() {
   t += pl('Transferencia',22) +pr(G.transferencia.length,8) +pr(plain(sum(G.transferencia)),20) +'\n';
   t += pl('Tarjeta',22)       +pr(G.tarjeta.length,8)       +pr(plain(sum(G.tarjeta)),20)       +'\n';
   t += pl('Mixto',22)         +pr(G.mixto.length,8)         +pr(plain(sum(G.mixto)),20)         +'\n';
-  t += S2+'\nTOTAL VENTA DIA:      '+pr(plain(tV),20+8)+'\nEFECTIVO A ENTREGAR: '+pr(plain(tE),20+8)+'\n'+S+'\n\n';
+  t += S2+'\nTOTAL VENTA DIA:      '+pr(plain(tV),20+8)+'\nEFECTIVO A ENTREGAR: '+pr(plain(efectivoFinal),20+8)+'\n'+S+'\n\n';
 
   // 4 columns side by side
   var CN=18, NW=14, BLK=CN+NW+2;
@@ -915,7 +1119,14 @@ function buildTXT() {
     totrow+=pl('TOTAL:',CN)+pr(plain(sum(G[keys[c]])),NW)+' ';
   }
   t+=totrow.trimEnd()+'\n'+S+'\n';
-  t+='TOTAL VENTA DIA: '+plain(tV)+'   |   EFECTIVO A ENTREGAR: '+plain(tE)+'\n'+S+'\n';
+  t+='TOTAL VENTA DIA: '+plain(tV)+'   |   EFECTIVO A ENTREGAR: '+plain(efectivoFinal)+'\n'+S+'\n';
+  if (gastos.length) {
+    t+='\nGASTOS DEL DIA\n'+S2+'\n';
+    gastos.forEach(function(g) {
+      t += pl(g.descripcion, 44) + pr(plain(g.monto), 28) + '\n';
+    });
+    t += S2+'\nTOTAL GASTOS: '+plain(totalGastos)+'\n'+S+'\n';
+  }
   t+='Generado: '+new Date().toLocaleString('es-CO')+'\n';
   return t;
 }
@@ -954,6 +1165,7 @@ document.getElementById('btn-txt').addEventListener('click', function() {
 
 document.getElementById('btn-csv').addEventListener('click', function() {
   if (!invoices.length) { alert('Primero procesa una carpeta de facturas.'); return; }
+  normalizeInvoices();
   var csv = '\uFEFF'+'Archivo,Metodo,Total,Efectivo\n';
   invoices.filter(function(i){ return i.method!=='error'; }).forEach(function(inv){
     csv += '"'+inv.name+'","'+inv.method+'","'+inv.total+'","'+inv.cashPart+'"\n';
@@ -973,9 +1185,11 @@ document.getElementById('btn-print').addEventListener('click', function() {
 
 // ── Impresión La Nevada (formato térmico 80mm) ───────────────────────
 function printLaNevada() {
+  normalizeInvoices();
+
   var G = {efectivo:[], transferencia:[], tarjeta:[], mixto:[]};
   var mixtosDesglosados = {}; // Para agrupar los mixtos desglosados por nombre original
-  var tV = 0, tTransf = 0;
+  var tV = 0, tE = 0;
   
   invoices.forEach(function(inv) {
     if (inv.method === 'error' || inv.method === 'desconocido') return;
@@ -998,9 +1212,7 @@ function printLaNevada() {
     }
     
     tV += inv.total;
-    if (inv.method === 'transferencia') {
-      tTransf += inv.total;
-    }
+    tE += inv.cashPart;
   });
   
   function sum(arr){ return arr.reduce(function(s,i){return s+i.total;},0); }
@@ -1113,7 +1325,7 @@ function printLaNevada() {
     +'</div>';
   
   // Gastos
-  var totalGastos = gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
+  var totalGastos = getTotalGastos();
   if (gastos.length > 0) {
     html += '<div class="sec">Gastos del día</div>';
     gastos.forEach(function(g) {
@@ -1122,11 +1334,11 @@ function printLaNevada() {
     html += '<div class="subtot"><span>Total Gastos</span><span style="color:#b00">'+fmtP(totalGastos)+'</span></div>';
   }
   
-  var efectivoFinal = tV - tTransf - totalGastos;
+  var efectivoFinal = tE - totalGastos;
   html += '<div class="total-box" style="border-color:#b00">'
     +'<div class="lbl">Efectivo a Entregar</div>'
     +'<div class="val" style="color:#b00">'+fmtP(efectivoFinal)+'</div>'
-    +'<div class="fecha" style="margin-top:3px">Venta - Transf - Gastos</div>'
+    +'<div class="fecha" style="margin-top:3px">Segun metodos de pago y gastos</div>'
     +'</div>';
 
   html += '<div class="footer">'
@@ -1149,9 +1361,11 @@ function printLaNevada() {
 
 // ── Impresión Novena-La Paz (formato A4) ─────────────────────────────
 function printNovenaLaPaz() {
+  normalizeInvoices();
+
   var G = {efectivo:[], transferencia:[], tarjeta:[], mixto:[]};
   var mixtosDesglosados = {}; // Para agrupar mixtos desglosados
-  var tV = 0, tTransf = 0;
+  var tV = 0, tE = 0;
   
   invoices.forEach(function(inv) {
     if (inv.method === 'error' || inv.method === 'desconocido') return;
@@ -1164,15 +1378,14 @@ function printNovenaLaPaz() {
       }
       mixtosDesglosados[originalName][inv.method] += inv.total;
       mixtosDesglosados[originalName].total += inv.total;
+      if (G[inv.method]) G[inv.method].push(inv);
     } else {
       // Facturas normales
       if (G[inv.method]) G[inv.method].push(inv);
     }
     
     tV += inv.total;
-    if (inv.method === 'transferencia') {
-      tTransf += inv.total;
-    }
+    tE += inv.cashPart;
   });
   
   function sum(arr){ return arr.reduce(function(s,i){return s+i.total;},0); }
@@ -1304,7 +1517,7 @@ function printNovenaLaPaz() {
   }
   
   // Gastos
-  var totalGastos = gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
+  var totalGastos = getTotalGastos();
   var gastosHTML = '';
   if (gastos.length > 0) {
     gastosHTML += '<div class="gastos-box">';
@@ -1316,13 +1529,13 @@ function printNovenaLaPaz() {
     gastosHTML += '</div>';
   }
   
-  var efectivoFinal = tV - tTransf - totalGastos;
+  var efectivoFinal = tE - totalGastos;
   
   html += mixtosHTML
     + gastosHTML
     +'<div class="totals-row">'
     +'  <div class="total-block"><div class="lbl">Total Venta Día</div><div class="val">'+fmtP(tV)+'</div></div>'
-    +'  <div class="total-block ef-cash"><div class="lbl">Efectivo a Entregar</div><div class="val">'+fmtP(efectivoFinal)+'</div><div style="font-size:7px;color:#000;font-weight:bold;margin-top:2px">Venta - Transf - Gastos</div></div>'
+    +'  <div class="total-block ef-cash"><div class="lbl">Efectivo a Entregar</div><div class="val">'+fmtP(efectivoFinal)+'</div><div style="font-size:7px;color:#000;font-weight:bold;margin-top:2px">Segun metodos de pago y gastos</div></div>'
     +'</div>'
     +'<div class="firma">'
     +'  <div class="firma-box">Elaborado por</div>'
