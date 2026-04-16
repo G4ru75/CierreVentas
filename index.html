@@ -992,63 +992,68 @@ function processFiles(files) {
       // Si es mixto, extraer las partes y crear facturas individuales para cada método
       if (method === 'mixto') {
         var paymentSection = getPaymentSection(text) || '';
-        var txtLower = paymentSection.toLowerCase();
+        var totalSection = getTotalSection(text) || '';
+        var lastHalf = text.substring(text.length / 2);
         
-        // Detectar si es texto corrupto
-        var hasCorruptText = /ixto|xto\b/.test(txtLower);
-        if (hasCorruptText) {
-          console.warn('⚠️ TEXTO CORRUPTO DETECTADO en ' + f.name + ' (ixto/xto)');
-        }
+        // Combinar secciones para búsqueda (priorizar paymentSection, luego totalSection, luego última mitad)
+        var searchAreas = [paymentSection, totalSection, lastHalf];
         
         console.log('═══ PROCESANDO MIXTO:', f.name, '═══');
-        console.log('Seccion de pago del PDF:', paymentSection.substring(0, 500));
+        console.log('Seccion de pago:', paymentSection.substring(0, 200));
+        console.log('Seccion de total:', totalSection.substring(0, 200));
         
         // Intentar extraer efectivo con varios patrones más flexibles
         // Buscar: E:, E =, Efectivo:, (E), etc.
-        var mEf = paymentSection.match(/\be\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
-            paymentSection.match(/efectivo\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-            paymentSection.match(/efec\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
-            paymentSection.match(/\(e\)\s*\$?\s*([\d.,]+)/i) ||
-            paymentSection.match(/\be[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
-        if (mEf) { 
-          var vEf = parseFloat(mEf[1].replace(/\./g,'').replace(',','.')); 
-          if (!isNaN(vEf) && vEf > 0) {
-            mixtoEf = vEf;
-            console.log('✓ Efectivo detectado:', vEf, '- Match:', mEf[0]);
+        for (var sa = 0; sa < searchAreas.length && mixtoEf === 0; sa++) {
+          var mEf = searchAreas[sa].match(/\be\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
+              searchAreas[sa].match(/efectivo\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
+              searchAreas[sa].match(/efec\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
+              searchAreas[sa].match(/\(e\)\s*\$?\s*([\d.,]+)/i) ||
+              searchAreas[sa].match(/\be[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
+          if (mEf) { 
+            var vEf = parseFloat(mEf[1].replace(/\./g,'').replace(',','.')); 
+            if (!isNaN(vEf) && vEf > 0) {
+              mixtoEf = vEf;
+              console.log('✓ Efectivo detectado:', vEf, '- Match:', mEf[0]);
+            }
           }
         }
         
         // Extraer transferencia con patrones más flexibles
-        var mTr = paymentSection.match(/\btr\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
-            paymentSection.match(/trans(?:f|ferencia)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-            paymentSection.match(/\(tr\)\s*\$?\s*([\d.,]+)/i) ||
-            paymentSection.match(/\btr[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
-        if (mTr) { 
-          var vTr = parseFloat(mTr[1].replace(/\./g,'').replace(',','.')); 
-          if (!isNaN(vTr) && vTr > 0) {
-            mixtoTr = vTr;
-            console.log('✓ Transferencia detectada:', vTr, '- Match:', mTr[0]);
+        for (var sa2 = 0; sa2 < searchAreas.length && mixtoTr === 0; sa2++) {
+          var mTr = searchAreas[sa2].match(/\btr\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
+              searchAreas[sa2].match(/trans(?:f|ferencia)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
+              searchAreas[sa2].match(/\(tr\)\s*\$?\s*([\d.,]+)/i) ||
+              searchAreas[sa2].match(/\btr[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
+          if (mTr) { 
+            var vTr = parseFloat(mTr[1].replace(/\./g,'').replace(',','.')); 
+            if (!isNaN(vTr) && vTr > 0) {
+              mixtoTr = vTr;
+              console.log('✓ Transferencia detectada:', vTr, '- Match:', mTr[0]);
+            }
           }
         }
         
         // Extraer tarjeta - más cuidadoso para no confundir con Tr
-        var tMatch = paymentSection.match(/[^r]\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
-               paymentSection.match(/^\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
-               paymentSection.match(/tarj(?:eta)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-               paymentSection.match(/\(t\)\s*\$?\s*([\d.,]+)/i) ||
-               paymentSection.match(/\nt[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
-        if (tMatch) { 
-          var vTa = parseFloat(tMatch[1].replace(/\./g,'').replace(',','.')); 
-          if (!isNaN(vTa) && vTa > 0) {
-            mixtoTa = vTa;
-            console.log('✓ Tarjeta detectada:', vTa, '- Match:', tMatch[0]);
+        for (var sa3 = 0; sa3 < searchAreas.length && mixtoTa === 0; sa3++) {
+          var tMatch = searchAreas[sa3].match(/[^r]\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
+                 searchAreas[sa3].match(/^\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
+                 searchAreas[sa3].match(/tarj(?:eta)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
+                 searchAreas[sa3].match(/\(t\)\s*\$?\s*([\d.,]+)/i) ||
+                 searchAreas[sa3].match(/\nt[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
+          if (tMatch) { 
+            var vTa = parseFloat(tMatch[1].replace(/\./g,'').replace(',','.')); 
+            if (!isNaN(vTa) && vTa > 0) {
+              mixtoTa = vTa;
+              console.log('✓ Tarjeta detectada:', vTa, '- Match:', tMatch[0]);
+            }
           }
         }
         
         console.log('Resumen desglose - E:', mixtoEf, 'Tr:', mixtoTr, 'T:', mixtoTa);
         
         log('  🔍 Analizando MIXTO en ' + f.name + ':', 'ok');
-        log('    Seccion metodo de pago: ' + paymentSection.substring(0, 200).replace(/\n/g, ' '), 'ok');
+        log('    Seccion encontrada: ' + (paymentSection ? 'método de pago' : totalSection ? 'total' : 'última mitad'), 'ok');
         
         // Crear facturas separadas para cada componente del mixto
         if (mixtoEf > 0) {
