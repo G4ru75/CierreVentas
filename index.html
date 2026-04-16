@@ -843,20 +843,6 @@ function getTotalSection(text) {
 }
 
 function detectMethod(text) {
-  var section = getPaymentSection(text);
-  if (!section) return 'desconocido';
-
-  var t = normalizeSearchText(section);
-
-  var explicit = t.match(/(?:metodo|medio|forma|tipo)\s*de?\s*pago\s*[:\-]?\s*([a-z]+)/i);
-  if (explicit && explicit[1]) {
-    var token = explicit[1];
-    if (/^mixt/.test(token)) return 'mixto';
-    if (/^efec|^contado|^cash/.test(token)) return 'efectivo';
-    if (/^trans|^pse|^nequi|^daviplata|^banco/.test(token)) return 'transferencia';
-    if (/^tarj|^credi|^debi|^visa|^master|^pos/.test(token)) return 'tarjeta';
-  }
-
   var P = {
     mixto:        [/\bmixt[oa]\b/,/efectivo.{0,20}transf/,/transf.{0,20}efectivo/,/e\s*[:=]\s*[\d]/,/tr\s*[:=]\s*[\d]/],
     efectivo:     [/efectivo/,/\bcash\b/,/\bcontado\b/],
@@ -864,17 +850,47 @@ function detectMethod(text) {
     tarjeta:      [/tarjeta/,/credito/,/debito/,/\bvisa\b/,/mastercard/,/datafono/,/\bpos\b/]
   };
   var order = ['mixto','efectivo','transferencia','tarjeta'];
-  for (var i = 0; i < order.length; i++) {
-    var m = order[i];
-    for (var j = 0; j < P[m].length; j++) {
-      if (P[m][j].test(t)) return m;
+
+  // Estrategia 1: Buscar en sección de método de pago si existe
+  var paymentSection = getPaymentSection(text);
+  if (paymentSection) {
+    var t = normalizeSearchText(paymentSection);
+    for (var i = 0; i < order.length; i++) {
+      var m = order[i];
+      for (var j = 0; j < P[m].length; j++) {
+        if (P[m][j].test(t)) return m;
+      }
     }
   }
+
+  // Estrategia 2: Buscar en la sección de total (método de pago suele estar cerca)
+  var totalSection = getTotalSection(text);
+  if (totalSection) {
+    var t2 = normalizeSearchText(totalSection);
+    for (var i2 = 0; i2 < order.length; i2++) {
+      var m2 = order[i2];
+      for (var j2 = 0; j2 < P[m2].length; j2++) {
+        if (P[m2][j2].test(t2)) return m2;
+      }
+    }
+  }
+
+  // Estrategia 3: Buscar en la última mitad del documento (evita productos)
+  var lastHalf = text.substring(text.length / 2);
+  var t3 = normalizeSearchText(lastHalf);
+  for (var i3 = 0; i3 < order.length; i3++) {
+    var m3 = order[i3];
+    for (var j3 = 0; j3 < P[m3].length; j3++) {
+      // Solo acepta "mixt" si es muy explícito en contexto de pago
+      if (m3 === 'mixto' && !/(?:metodo|medio|forma|pago|desgl|divid)\s+.*mixt/.test(t3)) continue;
+      if (P[m3][j3].test(t3)) return m3;
+    }
+  }
+
   return 'desconocido';
 }
 
 function extractTotal(text) {
-  var section = getTotalSection(text) || String(text || '');
   var pats = [
     /total\s*a?\s*pagar\s*[:\-]?\s*\$?\s*([\d.,]+)/i,
     /total\s*neto\s*[:\-]?\s*\$?\s*([\d.,]+)/i,
@@ -885,10 +901,12 @@ function extractTotal(text) {
   ];
 
   var matches = [];
+  
+  // Buscar en todo el texto (el total es importante detectarlo bien)
   for (var i = 0; i < pats.length; i++) {
     var gp = new RegExp(pats[i].source, 'gi');
     var m;
-    while ((m = gp.exec(section)) !== null) {
+    while ((m = gp.exec(text)) !== null) {
       var v = parseFloat(m[1].replace(/\./g,'').replace(',','.'));
       if (!isNaN(v) && v > 0) {
         var label = String(m[0] || '').toLowerCase();
@@ -903,9 +921,11 @@ function extractTotal(text) {
     return matches[matches.length - 1].value;
   }
 
-  if (section !== text) {
+  // Fallback: si no se encontró con patrones, buscar solo en sección de total
+  var totalSection = getTotalSection(text);
+  if (totalSection && totalSection !== text) {
     for (var j = 0; j < pats.length; j++) {
-      var one = pats[j].exec(section);
+      var one = pats[j].exec(totalSection);
       pats[j].lastIndex = 0;
       if (one && one[1]) {
         var fallback = parseFloat(one[1].replace(/\./g, '').replace(',', '.'));
