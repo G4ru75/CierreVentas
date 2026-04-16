@@ -12,7 +12,7 @@
 :root {
   --bg:#0c0e0c; --surface:#131513; --border:#1e231e; --border2:#252c25;
   --green:#aaee66; --teal:#66eec8; --yellow:#eec866; --red:#ee8866; --purple:#bb88ee;
-  --text:#dfeadf; --muted:#4e5f4e; --card:#141614;
+  --text:#dfeadf; --muted:#a4b5a4; --card:#141614;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh}
@@ -23,11 +23,11 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:20px}
 .logo h1{font-family:'Syne',sans-serif;font-size:20px;font-weight:800}
 .logo h1 em{font-style:normal;color:var(--green)}
-.logo p{font-size:9px;color:#000;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;margin-top:3px}
+.logo p{font-size:9px;color:var(--muted);font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;margin-top:3px}
 .date-chip{font-size:10px;color:var(--green);background:rgba(170,238,102,.07);border:1px solid rgba(170,238,102,.18);padding:6px 12px;border-radius:5px}
 
 /* NOTICE */
-.notice{background:rgba(238,200,102,.07);border:1px solid rgba(238,200,102,.2);border-radius:6px;padding:8px 12px;font-size:10px;color:#000;font-weight:bold;margin-bottom:16px;line-height:1.4}
+.notice{background:rgba(238,200,102,.07);border:1px solid rgba(238,200,102,.2);border-radius:6px;padding:8px 12px;font-size:10px;color:var(--muted);font-weight:bold;margin-bottom:16px;line-height:1.4}
 .notice strong{display:block;margin-bottom:3px}
 
 /* DROP ZONE */
@@ -35,7 +35,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .drop-area.over{border-color:var(--green);background:rgba(170,238,102,.03)}
 .drop-area .icon{font-size:28px;display:block;margin-bottom:10px}
 .drop-area h2{font-family:'Syne',sans-serif;font-size:15px;margin-bottom:5px}
-.drop-area p{font-size:10px;color:#000;font-weight:bold;margin-bottom:14px}
+.drop-area p{font-size:10px;color:var(--muted);font-weight:bold;margin-bottom:14px}
 .pick-btn{display:inline-block;padding:8px 18px;background:var(--green);color:#0c0e0c;border:none;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;transition:opacity .2s}
 .pick-btn:hover{opacity:.85}
 /* Hidden real input */
@@ -43,16 +43,16 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 
 /* PROGRESS */
 #prog{display:none;margin-bottom:20px}
-.ph{display:flex;justify-content:space-between;font-size:10px;margin-bottom:6px;color:#000;font-weight:bold}
+.ph{display:flex;justify-content:space-between;font-size:10px;margin-bottom:6px;color:var(--muted);font-weight:bold}
 .pt{height:3px;background:var(--border);border-radius:2px}
 .pf{height:3px;background:linear-gradient(90deg,var(--green),var(--teal));border-radius:2px;width:0;transition:width .3s}
 .log{margin-top:10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 12px;max-height:100px;overflow-y:auto}
-.ll{font-size:9px;color:#000;font-weight:bold;padding:1px 0}
+.ll{font-size:9px;color:var(--muted);font-weight:bold;padding:1px 0}
 .ll.ok{color:var(--green)} .ll.warn{color:var(--yellow)} .ll.err{color:var(--red)}
 
 /* RESULTS */
 #results{display:none}
-.sec{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#000;margin-bottom:8px;margin-top:3px;font-weight:bold}
+.sec{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;margin-top:3px;font-weight:bold}
 
 /* CARDS */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:18px}
@@ -60,17 +60,17 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
 .card.ef::after{background:var(--green)} .card.tr::after{background:var(--teal)}
 .card.ta::after{background:var(--yellow)} .card.mx::after{background:var(--purple)}
-.cl{font-size:8px;letter-spacing:1.2px;text-transform:uppercase;color:#000;margin-bottom:6px;font-weight:bold}
+.cl{font-size:8px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:bold}
 .cv{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;line-height:1}
 .card.ef .cv{color:var(--green)} .card.tr .cv{color:var(--teal)}
 .card.ta .cv{color:var(--yellow)} .card.mx .cv{color:var(--purple)}
-.cs{font-size:9px;color:#000;margin-top:3px;font-weight:bold}
+.cs{font-size:9px;color:var(--muted);margin-top:3px;font-weight:bold}
 
 /* COLUMN TABLE */
 .tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px}
 .tbl-hdr{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface)}
 .tbl-hdr b{font-family:'Syne',sans-serif;font-size:11px}
-.tbl-hdr span{font-size:9px;color:#000;font-weight:bold}
+.tbl-hdr span{font-size:9px;color:var(--muted);font-weight:bold}
 .cols{display:grid;grid-template-columns:repeat(4,1fr)}
 .col{border-right:1px solid var(--border);display:flex;flex-direction:column}
 .col:last-child{border-right:none}
@@ -83,23 +83,23 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .ci{flex:1;padding:3px 0}
 .row{display:flex;justify-content:space-between;padding:4px 10px;font-size:9px;border-bottom:1px solid rgba(255,255,255,.02)}
 .row:last-child{border-bottom:none}
-.rn{color:#000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;font-weight:bold}
+.rn{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100px;font-weight:bold}
 .ra{font-weight:500;font-size:10px;white-space:nowrap;margin-left:5px}
 .ra.ef{color:var(--green)} .ra.tr{color:var(--teal)} .ra.ta{color:var(--yellow)} .ra.mx{color:var(--purple)}
-.empty{padding:12px 10px;font-size:9px;color:#000;font-weight:bold;font-style:italic}
+.empty{padding:12px 10px;font-size:9px;color:var(--muted);font-weight:bold;font-style:italic}
 .cf{border-top:2px solid var(--border2);padding:7px 10px;background:rgba(255,255,255,.015)}
-.fl{font-size:8px;color:#000;letter-spacing:0.8px;text-transform:uppercase;font-weight:bold}
+.fl{font-size:8px;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;font-weight:bold}
 .fv{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;margin:2px 0}
-.fc{font-size:8px;color:#000;font-weight:bold}
+.fc{font-size:8px;color:var(--muted);font-weight:bold}
 .cf.ef .fv{color:var(--green)} .cf.tr .fv{color:var(--teal)} .cf.ta .fv{color:var(--yellow)} .cf.mx .fv{color:var(--purple)}
 
 /* TOTALS */
 .totals{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .tbox{background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
-.tl{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:#000;font-weight:bold}
+.tl{font-size:9px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:bold}
 .tv2{font-family:'Syne',sans-serif;font-size:19px;font-weight:800}
 .tbox.vt .tv2{color:var(--text)} .tbox.et .tv2{color:var(--red)}
-.ts{font-size:9px;color:#000;margin-top:2px;font-weight:bold}
+.ts{font-size:9px;color:var(--muted);margin-top:2px;font-weight:bold}
 
 /* GASTOS */
 #gastos-sec{margin-bottom:16px}
@@ -116,27 +116,27 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .gasto-amt{font-weight:700;color:var(--teal);margin-right:6px}
 .gasto-del{padding:3px 8px;background:rgba(238,102,102,.1);color:#ee6666;border:1px solid rgba(238,102,102,.25);border-radius:4px;font-size:8px;cursor:pointer;font-family:'DM Mono',monospace}
 .gastos-total{border-top:2px solid rgba(102,170,238,.25);padding-top:8px;margin-top:6px;display:flex;justify-content:space-between;font-size:11px;font-weight:900}
-.gastos-total .lbl{color:#000;font-weight:bold}
+.gastos-total .lbl{color:var(--muted);font-weight:bold}
 .gastos-total .val{color:var(--teal);font-size:13px}
-.gastos-empty{color:#000;font-weight:bold;font-style:italic;font-size:9px;text-align:center;padding:6px}
+.gastos-empty{color:var(--muted);font-weight:bold;font-style:italic;font-size:9px;text-align:center;padding:6px}
 
 /* EDIT INVOICES */
 #edit-sec{margin-bottom:16px}
 .edit-box{background:rgba(170,238,102,.05);border:1px solid rgba(170,238,102,.18);border-radius:6px;padding:12px}
 .edit-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .edit-head strong{font-size:11px;color:var(--green);margin:0;font-family:'Syne',sans-serif}
-.edit-head span{font-size:9px;color:#000;font-weight:bold}
-.edit-note{font-size:9px;color:#000;font-weight:bold;line-height:1.5;margin-bottom:10px}
+.edit-head span{font-size:9px;color:var(--muted);font-weight:bold}
+.edit-note{font-size:9px;color:var(--muted);font-weight:bold;line-height:1.5;margin-bottom:10px}
 .edit-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;padding-right:4px}
 .edit-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(170,238,102,.08)}
 .edit-row:last-child{border-bottom:none}
 .edit-main{min-width:0;flex:1}
 .edit-name{font-size:10px;color:var(--text);font-weight:700;word-break:break-word}
-.edit-meta{font-size:9px;color:#000;font-weight:bold;margin-top:3px}
+.edit-meta{font-size:9px;color:var(--muted);font-weight:bold;margin-top:3px}
 .edit-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .edit-select{background:var(--surface);border:1px solid rgba(170,238,102,.25);color:var(--text);padding:5px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;outline:none;min-width:140px}
 .edit-save{padding:5px 10px;background:rgba(170,238,102,.14);color:var(--green);border:1px solid rgba(170,238,102,.28);border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;font-weight:700}
-.edit-empty{color:#000;font-weight:bold;font-style:italic;font-size:9px;text-align:center;padding:6px}
+.edit-empty{color:var(--muted);font-weight:bold;font-style:italic;font-size:9px;text-align:center;padding:6px}
 
 /* UNRECOGNIZED */
 #unk{display:none;margin-bottom:16px}
@@ -144,7 +144,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .wb h3{font-size:11px;color:var(--yellow);margin-bottom:8px;font-family:'Syne',sans-serif}
 .wr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(238,200,102,.08);font-size:10px;gap:6px;flex-wrap:wrap}
 .wr:last-child{border-bottom:none}
-.wn{color:#000;font-weight:bold}
+.wn{color:var(--muted);font-weight:bold}
 .mi{display:flex;gap:5px;align-items:center}
 .mi input,.mi select{background:var(--surface);border:1px solid rgba(238,200,102,.25);color:var(--text);padding:4px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;outline:none}
 .mi input{width:90px}
@@ -154,10 +154,10 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 .btn{padding:8px 16px;border-radius:5px;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;cursor:pointer;border:none;transition:all .2s;letter-spacing:.3px}
 .bp{background:var(--green);color:#0c0e0c} .bp:hover{opacity:.85;transform:translateY(-1px)}
-.bs{background:transparent;color:var(--text);border:1px solid var(--border2)} .bs:hover{border-color:#000;background:var(--surface)}
+.bs{background:transparent;color:var(--text);border:1px solid var(--border2)} .bs:hover{border-color:var(--muted);background:var(--surface)}
 .br{background:transparent;color:var(--red);border:1px solid rgba(238,136,102,.25)} .br:hover{background:rgba(238,136,102,.06)}
 
-footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;font-size:9px;color:#000;font-weight:bold;margin-top:12px}
+footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;font-size:9px;color:var(--muted);font-weight:bold;margin-top:12px}
 
 /* SEDE SELECTOR */
 .sede-btn:hover{border-color:var(--green)!important;background:rgba(170,238,102,.03)!important;transform:translateY(-2px)!important}
@@ -198,18 +198,18 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
 <div id="sede-selector" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh">
   <div style="text-align:center;margin-bottom:40px">
     <h1 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:12px">Selecciona la <em style="color:var(--green)">Sede</em></h1>
-    <p style="font-size:14px;color:#000;font-weight:bold">Elige la sede para configurar el formato de impresión</p>
+    <p style="font-size:14px;color:var(--muted);font-weight:bold">Elige la sede para configurar el formato de impresión</p>
   </div>
   <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center">
     <button onclick="selectSede('nevada')" class="sede-btn" style="width:240px;padding:32px 24px;background:var(--surface);border:2px solid var(--border2);border-radius:12px;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace">
       <div style="font-size:40px;margin-bottom:16px">🎫</div>
       <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green);margin-bottom:8px">La Nevada</div>
-      <div style="font-size:11px;color:#000;font-weight:bold;line-height:1.5">Impresora térmica<br>(tickets 80mm)</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:bold;line-height:1.5">Impresora térmica<br>(tickets 80mm)</div>
     </button>
     <button onclick="selectSede('novena')" class="sede-btn" style="width:240px;padding:32px 24px;background:var(--surface);border:2px solid var(--border2);border-radius:12px;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace">
       <div style="font-size:40px;margin-bottom:16px">📄</div>
       <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--teal);margin-bottom:8px">Novena - La Paz</div>
-      <div style="font-size:11px;color:#000;font-weight:bold;line-height:1.5">Impresora estándar<br>(papel A4)</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:bold;line-height:1.5">Impresora estándar<br>(papel A4)</div>
     </button>
   </div>
 </div>
@@ -224,7 +224,7 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
   </div>
   <div style="display:flex;align-items:center;gap:16px">
     <div class="date-chip" id="dchip">—</div>
-    <button onclick="changeSede()" style="padding:8px 14px;background:transparent;border:1px solid var(--border2);border-radius:5px;font-size:10px;color:#000;font-weight:bold;cursor:pointer;font-family:'DM Mono',monospace">Cambiar sede</button>
+    <button onclick="changeSede()" style="padding:8px 14px;background:transparent;border:1px solid var(--border2);border-radius:5px;font-size:10px;color:var(--muted);font-weight:bold;cursor:pointer;font-family:'DM Mono',monospace">Cambiar sede</button>
   </div>
 </header>
 
@@ -786,10 +786,79 @@ function readPDF(file) {
 }
 
 // ── Detection ────────────────────────────────────────────────────────
+function normalizeSearchText(text) {
+  return String(text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getSectionWindow(text, anchors, before, after) {
+  var raw = String(text || '');
+  if (!raw) return '';
+
+  var normalized = normalizeSearchText(raw);
+  var startIdx = -1;
+
+  for (var i = 0; i < anchors.length; i++) {
+    var idx = normalized.indexOf(anchors[i]);
+    if (idx !== -1 && (startIdx === -1 || idx < startIdx)) startIdx = idx;
+  }
+
+  if (startIdx === -1) return '';
+
+  var from = Math.max(0, startIdx - (before || 0));
+  var to = Math.min(raw.length, startIdx + (after || 0));
+  return raw.slice(from, to);
+}
+
+function getPaymentSection(text) {
+  return getSectionWindow(
+    text,
+    ['metodo de pago', 'medio de pago', 'forma de pago', 'tipo de pago', 'metodo pago', 'medio pago', 'forma pago'],
+    40,
+    320
+  );
+}
+
+function getTotalSection(text) {
+  var raw = String(text || '');
+  if (!raw) return '';
+
+  var normalized = normalizeSearchText(raw);
+  var labels = ['total a pagar', 'total neto', 'valor total', 'gran total', 'total factura', 'total'];
+  var idx = -1;
+
+  for (var i = 0; i < labels.length; i++) {
+    var found = normalized.lastIndexOf(labels[i]);
+    if (found > idx) idx = found;
+  }
+
+  if (idx === -1) return '';
+  var from = Math.max(0, idx - 50);
+  var to = Math.min(raw.length, idx + 180);
+  return raw.slice(from, to);
+}
+
 function detectMethod(text) {
-  var t = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  var section = getPaymentSection(text);
+  if (!section) return 'desconocido';
+
+  var t = normalizeSearchText(section);
+
+  var explicit = t.match(/(?:metodo|medio|forma|tipo)\s*de?\s*pago\s*[:\-]?\s*([a-z]+)/i);
+  if (explicit && explicit[1]) {
+    var token = explicit[1];
+    if (/^mixt/.test(token)) return 'mixto';
+    if (/^efec|^contado|^cash/.test(token)) return 'efectivo';
+    if (/^trans|^pse|^nequi|^daviplata|^banco/.test(token)) return 'transferencia';
+    if (/^tarj|^credi|^debi|^visa|^master|^pos/.test(token)) return 'tarjeta';
+  }
+
   var P = {
-    mixto:        [/mixto/,/ixto/,/\bxto\b/,/efectivo.{0,20}transf/,/transf.{0,20}efectivo/,/parte.{0,20}efectivo/,/e\s*[:=]\s*[\d]/,/tr\s*[:=]\s*[\d]/],
+    mixto:        [/\bmixt[oa]\b/,/efectivo.{0,20}transf/,/transf.{0,20}efectivo/,/e\s*[:=]\s*[\d]/,/tr\s*[:=]\s*[\d]/],
     efectivo:     [/efectivo/,/\bcash\b/,/\bcontado\b/],
     transferencia:[/transferencia/,/\btransf\b/,/deposito/,/\bpse\b/,/nequi/,/daviplata/,/bancolombia/],
     tarjeta:      [/tarjeta/,/credito/,/debito/,/\bvisa\b/,/mastercard/,/datafono/,/\bpos\b/]
@@ -805,24 +874,46 @@ function detectMethod(text) {
 }
 
 function extractTotal(text) {
+  var section = getTotalSection(text) || String(text || '');
   var pats = [
     /total\s*a?\s*pagar\s*[:\-]?\s*\$?\s*([\d.,]+)/i,
     /total\s*neto\s*[:\-]?\s*\$?\s*([\d.,]+)/i,
     /valor\s*total\s*[:\-]?\s*\$?\s*([\d.,]+)/i,
     /gran\s*total\s*[:\-]?\s*\$?\s*([\d.,]+)/i,
     /total\s*factura\s*[:\-]?\s*\$?\s*([\d.,]+)/i,
-    /\btotal\s*[:\-]?\s*\$?\s*([\d.,]+)/i,
-    /\$\s*([\d.,]+)/
+    /\btotal\s*[:\-]?\s*\$?\s*([\d.,]+)/i
   ];
+
+  var matches = [];
   for (var i = 0; i < pats.length; i++) {
     var gp = new RegExp(pats[i].source, 'gi');
-    var vals = [], m;
-    while ((m = gp.exec(text)) !== null) {
+    var m;
+    while ((m = gp.exec(section)) !== null) {
       var v = parseFloat(m[1].replace(/\./g,'').replace(',','.'));
-      if (!isNaN(v) && v > 0) vals.push(v);
+      if (!isNaN(v) && v > 0) {
+        var label = String(m[0] || '').toLowerCase();
+        if (label.indexOf('subtotal') !== -1) continue;
+        matches.push({ value: v, idx: m.index });
+      }
     }
-    if (vals.length) return Math.max.apply(null, vals);
   }
+
+  if (matches.length) {
+    matches.sort(function(a, b) { return a.idx - b.idx; });
+    return matches[matches.length - 1].value;
+  }
+
+  if (section !== text) {
+    for (var j = 0; j < pats.length; j++) {
+      var one = pats[j].exec(section);
+      pats[j].lastIndex = 0;
+      if (one && one[1]) {
+        var fallback = parseFloat(one[1].replace(/\./g, '').replace(',', '.'));
+        if (!isNaN(fallback) && fallback > 0) return fallback;
+      }
+    }
+  }
+
   return 0;
 }
 
@@ -880,7 +971,8 @@ function processFiles(files) {
       
       // Si es mixto, extraer las partes y crear facturas individuales para cada método
       if (method === 'mixto') {
-        var txtLower = text.toLowerCase();
+        var paymentSection = getPaymentSection(text) || '';
+        var txtLower = paymentSection.toLowerCase();
         
         // Detectar si es texto corrupto
         var hasCorruptText = /ixto|xto\b/.test(txtLower);
@@ -889,15 +981,15 @@ function processFiles(files) {
         }
         
         console.log('═══ PROCESANDO MIXTO:', f.name, '═══');
-        console.log('Texto completo del PDF:', text.substring(0, 500));
+        console.log('Seccion de pago del PDF:', paymentSection.substring(0, 500));
         
         // Intentar extraer efectivo con varios patrones más flexibles
         // Buscar: E:, E =, Efectivo:, (E), etc.
-        var mEf = text.match(/\be\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
-                  text.match(/efectivo\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-                  text.match(/efec\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
-                  text.match(/\(e\)\s*\$?\s*([\d.,]+)/i) ||
-                  text.match(/\be[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
+        var mEf = paymentSection.match(/\be\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
+            paymentSection.match(/efectivo\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
+            paymentSection.match(/efec\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
+            paymentSection.match(/\(e\)\s*\$?\s*([\d.,]+)/i) ||
+            paymentSection.match(/\be[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
         if (mEf) { 
           var vEf = parseFloat(mEf[1].replace(/\./g,'').replace(',','.')); 
           if (!isNaN(vEf) && vEf > 0) {
@@ -907,10 +999,10 @@ function processFiles(files) {
         }
         
         // Extraer transferencia con patrones más flexibles
-        var mTr = text.match(/\btr\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
-                  text.match(/trans(?:f|ferencia)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-                  text.match(/\(tr\)\s*\$?\s*([\d.,]+)/i) ||
-                  text.match(/\btr[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
+        var mTr = paymentSection.match(/\btr\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
+            paymentSection.match(/trans(?:f|ferencia)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
+            paymentSection.match(/\(tr\)\s*\$?\s*([\d.,]+)/i) ||
+            paymentSection.match(/\btr[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
         if (mTr) { 
           var vTr = parseFloat(mTr[1].replace(/\./g,'').replace(',','.')); 
           if (!isNaN(vTr) && vTr > 0) {
@@ -920,11 +1012,11 @@ function processFiles(files) {
         }
         
         // Extraer tarjeta - más cuidadoso para no confundir con Tr
-        var tMatch = text.match(/[^r]\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
-                     text.match(/^\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
-                     text.match(/tarj(?:eta)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-                     text.match(/\(t\)\s*\$?\s*([\d.,]+)/i) ||
-                     text.match(/\nt[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
+        var tMatch = paymentSection.match(/[^r]\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
+               paymentSection.match(/^\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
+               paymentSection.match(/tarj(?:eta)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
+               paymentSection.match(/\(t\)\s*\$?\s*([\d.,]+)/i) ||
+               paymentSection.match(/\nt[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
         if (tMatch) { 
           var vTa = parseFloat(tMatch[1].replace(/\./g,'').replace(',','.')); 
           if (!isNaN(vTa) && vTa > 0) {
@@ -936,7 +1028,7 @@ function processFiles(files) {
         console.log('Resumen desglose - E:', mixtoEf, 'Tr:', mixtoTr, 'T:', mixtoTa);
         
         log('  🔍 Analizando MIXTO en ' + f.name + ':', 'ok');
-        log('    Texto encontrado: ' + text.substring(0, 200).replace(/\n/g, ' '), 'ok');
+        log('    Seccion metodo de pago: ' + paymentSection.substring(0, 200).replace(/\n/g, ' '), 'ok');
         
         // Crear facturas separadas para cada componente del mixto
         if (mixtoEf > 0) {
