@@ -475,7 +475,20 @@ function readPDF(file) {
       return chain.then(function(text) {
         return pdf.getPage(i).then(function(pg) {
           return pg.getTextContent().then(function(ct) {
-            return text + ct.items.map(function(x) { return x.str; }).join(' ') + '\n';
+            var tokens = ct.items.map(function(x) { return x.str; });
+            var result = '';
+            for (var j = 0; j < tokens.length; j++) {
+              var prev = j > 0 ? tokens[j-1] : '';
+              var curr = tokens[j];
+              var prevEndsWithNum = /[\d.,$]$/.test(prev);
+              var currStartsWithNum = /^[\d.]/.test(curr);
+              // No agregar espacio si estamos en medio de un número
+              if (j > 0 && !(prevEndsWithNum && currStartsWithNum)) {
+                result += ' ';
+              }
+              result += curr;
+            }
+            return text + result + '\n';
           });
         });
       });
@@ -576,13 +589,49 @@ function processFiles(files) {
       if (method === 'efectivo') cash = total;
       var mixtoEf = 0, mixtoTr = 0, mixtoTa = 0;
       if (method === 'mixto') {
+        // Función auxiliar para normalizar números en formato colombiano
+        function parseColumbian(str) {
+          if (!str) return 0;
+          str = String(str).trim();
+          // Eliminar símbolos de moneda y espacios
+          str = str.replace(/[^\d.,]/g, '');
+          if (!str) return 0;
+          
+          // Buscar última coma - si existe y tiene 1-2 dígitos después, es decimal
+          var lastCommaIdx = str.lastIndexOf(',');
+          var hasDecimal = lastCommaIdx >= 0;
+          var afterComma = hasDecimal ? str.substring(lastCommaIdx + 1) : '';
+          
+          // Si la coma tiene 1-2 dígitos después, es decimal. Si tiene 3+, es mil (raro pero posible en otros formatos)
+          var isCommaDecimal = hasDecimal && afterComma.length >= 1 && afterComma.length <= 2;
+          
+          // Limpiar el número:
+          // 1. Remover todos los puntos (siempre son miles en Colombia)
+          str = str.replace(/\./g, '');
+          // 2. Si la coma es decimal, convertirla a punto. Si no, solo removerla.
+          if (isCommaDecimal) {
+            str = str.replace(',', '.');
+          } else {
+            str = str.replace(/,/g, '');
+          }
+          
+          var v = parseFloat(str);
+          return (!isNaN(v) && v > 0) ? v : 0;
+        }
+        
         cash = extractCash(text) || total;
         mixtoEf = extractCash(text);
-        // Try to extract transferencia part from mixto
-        var mTr = text.match(/transf[^\d]*([\d.,]+)/i);
-        if (mTr) { var vTr = parseFloat(mTr[1].replace(/\./g,'').replace(',','.')); if (!isNaN(vTr) && vTr > 0) mixtoTr = vTr; }
-        var mTa = text.match(/tarjeta[^\d]*([\d.,]+)/i);
-        if (mTa) { var vTa = parseFloat(mTa[1].replace(/\./g,'').replace(',','.')); if (!isNaN(vTa) && vTa > 0) mixtoTa = vTa; }
+        
+        // Try to extract transferencia part from mixto - mejorado
+        var mTr = text.match(/\btr\s*[:=]\s*\$?\s*([0-9.,]+)/i) || 
+                  text.match(/trans(?:f|ferencia)?\s*[:=\-]\s*\$?\s*([0-9.,]+)/i);
+        if (mTr) { mixtoTr = parseColumbian(mTr[1]); }
+        
+        // Try to extract tarjeta part from mixto - mejorado
+        var mTa = text.match(/\bt\s*[:=]\s*\$?\s*([0-9.,]+)/i) || 
+                  text.match(/tarj(?:eta)?\s*[:=\-]\s*\$?\s*([0-9.,]+)/i);
+        if (mTa) { mixtoTa = parseColumbian(mTa[1]); }
+        
         if (!mixtoEf && !mixtoTr && !mixtoTa) { mixtoEf = 0; } // no breakdown found
       }
       invoices.push({name: f.name, method: method, total: total, cashPart: cash, mixtoEf: mixtoEf, mixtoTr: mixtoTr, mixtoTa: mixtoTa});

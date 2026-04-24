@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cierre de Ventas Diario</title>
-<!-- PDF.js desde CDN - requiere internet la primera vez -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
@@ -38,7 +37,6 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .drop-area p{font-size:10px;color:var(--muted);font-weight:bold;margin-bottom:14px}
 .pick-btn{display:inline-block;padding:8px 18px;background:var(--green);color:#0c0e0c;border:none;border-radius:5px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;transition:opacity .2s}
 .pick-btn:hover{opacity:.85}
-/* Hidden real input */
 #folder-input{position:absolute;left:-9999px;opacity:0;width:1px;height:1px}
 
 /* PROGRESS */
@@ -127,16 +125,24 @@ header{display:flex;justify-content:space-between;align-items:flex-end;border-bo
 .edit-head strong{font-size:11px;color:var(--green);margin:0;font-family:'Syne',sans-serif}
 .edit-head span{font-size:9px;color:var(--muted);font-weight:bold}
 .edit-note{font-size:9px;color:var(--muted);font-weight:bold;line-height:1.5;margin-bottom:10px}
-.edit-list{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;padding-right:4px}
-.edit-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(170,238,102,.08)}
+.edit-list{display:flex;flex-direction:column;gap:0;max-height:340px;overflow-y:auto;padding-right:4px}
+.edit-row{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-bottom:1px solid rgba(170,238,102,.08)}
 .edit-row:last-child{border-bottom:none}
+.edit-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .edit-main{min-width:0;flex:1}
-.edit-name{font-size:10px;color:var(--text);font-weight:700;word-break:break-word}
-.edit-meta{font-size:9px;color:var(--muted);font-weight:bold;margin-top:3px}
-.edit-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
-.edit-select{background:var(--surface);border:1px solid rgba(170,238,102,.25);color:var(--text);padding:5px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;outline:none;min-width:140px}
+.edit-name{font-size:10px;color:var(--text);font-weight:700;word-break:break-word;display:flex;align-items:center;gap:6px}
+.edit-badge{font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;flex-shrink:0}
+.edit-badge.modified{background:rgba(238,200,102,.15);color:var(--yellow);border:1px solid rgba(238,200,102,.3)}
+.edit-meta{font-size:9px;color:var(--muted);font-weight:bold;margin-top:2px}
+.edit-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.edit-select{background:var(--surface);border:1px solid rgba(170,238,102,.25);color:var(--text);padding:5px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;outline:none;min-width:130px}
+.edit-total-input{background:var(--surface);border:1px solid rgba(102,200,238,.25);color:var(--text);padding:5px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;outline:none;width:120px}
+.edit-total-input:focus{border-color:rgba(102,200,238,.55)}
 .edit-save{padding:5px 10px;background:rgba(170,238,102,.14);color:var(--green);border:1px solid rgba(170,238,102,.28);border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;font-weight:700}
+.edit-del{padding:5px 10px;background:rgba(238,136,102,.1);color:var(--red);border:1px solid rgba(238,136,102,.25);border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;cursor:pointer;font-weight:700}
+.edit-del:hover{background:rgba(238,136,102,.2)}
 .edit-empty{color:var(--muted);font-weight:bold;font-style:italic;font-size:9px;text-align:center;padding:6px}
+.edit-flete-note{font-size:8px;color:rgba(102,200,238,.7);font-weight:bold;margin-top:3px}
 
 /* UNRECOGNIZED */
 #unk{display:none;margin-bottom:16px}
@@ -166,7 +172,7 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
 @media print {
   @page{margin:1.2cm}
   body{background:white!important;color:black!important}
-  body::before,header,.notice,.drop-area,#prog,.actions,footer,.cards{display:none!important}
+  body::before,header,.notice,.drop-area,#prog,.actions,footer,.cards,#edit-sec,#gastos-sec .add-gasto-form,.gasto-del{display:none!important}
   #results{display:block!important}
   .sec{color:#000!important;font-weight:bold!important}
   .print-hdr{display:block!important}
@@ -194,22 +200,22 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
 <body>
 <div class="wrap">
 
-<!-- SELECCIÓN DE SEDE -->
+<!-- SELECCION DE SEDE -->
 <div id="sede-selector" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh">
   <div style="text-align:center;margin-bottom:40px">
     <h1 style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:12px">Selecciona la <em style="color:var(--green)">Sede</em></h1>
-    <p style="font-size:14px;color:var(--muted);font-weight:bold">Elige la sede para configurar el formato de impresión</p>
+    <p style="font-size:14px;color:var(--muted);font-weight:bold">Elige la sede para configurar el formato de impresion</p>
   </div>
   <div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center">
     <button onclick="selectSede('nevada')" class="sede-btn" style="width:240px;padding:32px 24px;background:var(--surface);border:2px solid var(--border2);border-radius:12px;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace">
-      <div style="font-size:40px;margin-bottom:16px">🎫</div>
+      <div style="font-size:40px;margin-bottom:16px">&#128443;</div>
       <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--green);margin-bottom:8px">La Nevada</div>
-      <div style="font-size:11px;color:var(--muted);font-weight:bold;line-height:1.5">Impresora térmica<br>(tickets 80mm)</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:bold;line-height:1.5">Impresora termica<br>(tickets 80mm)</div>
     </button>
     <button onclick="selectSede('novena')" class="sede-btn" style="width:240px;padding:32px 24px;background:var(--surface);border:2px solid var(--border2);border-radius:12px;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace">
-      <div style="font-size:40px;margin-bottom:16px">📄</div>
+      <div style="font-size:40px;margin-bottom:16px">&#128196;</div>
       <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--teal);margin-bottom:8px">Novena - La Paz</div>
-      <div style="font-size:11px;color:var(--muted);font-weight:bold;line-height:1.5">Impresora estándar<br>(papel A4)</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:bold;line-height:1.5">Impresora estandar<br>(papel A4)</div>
     </button>
   </div>
 </div>
@@ -220,34 +226,33 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
 <header>
   <div class="logo">
     <h1>Cierre de <em>Ventas</em></h1>
-    <p>Procesamiento automático de facturas PDF</p>
+    <p>Procesamiento automatico de facturas PDF</p>
   </div>
   <div style="display:flex;align-items:center;gap:16px">
-    <div class="date-chip" id="dchip">—</div>
+    <div class="date-chip" id="dchip">&#8212;</div>
     <button onclick="changeSede()" style="padding:8px 14px;background:transparent;border:1px solid var(--border2);border-radius:5px;font-size:10px;color:var(--muted);font-weight:bold;cursor:pointer;font-family:'DM Mono',monospace">Cambiar sede</button>
   </div>
 </header>
 
 <div class="notice" id="sede-notice">
-  <strong id="sede-name">—</strong>
+  <strong id="sede-name">&#8212;</strong>
 </div>
 
 <div class="notice">
-  <strong>⚠ Requiere conexión a internet</strong>
+  <strong>Requiere conexion a internet</strong>
 </div>
 
-<!-- INPUT OCULTO - fuera del drop area para evitar conflictos Opera -->
 <input type="file" id="folder-input" webkitdirectory multiple accept=".pdf" style="position:absolute;left:-9999px;opacity:0;width:1px;height:1px">
 
 <div class="drop-area" id="dz">
-  <span class="icon">📂</span>
-  <h2>Arrastra la carpeta del día aquí</h2>
-  <p>O haz clic en el botón para seleccionarla manualmente</p>
-  <button class="pick-btn" id="pick-btn" type="button">📁 Seleccionar carpeta</button>
+  <span class="icon">&#128194;</span>
+  <h2>Arrastra la carpeta del dia aqui</h2>
+  <p>O haz clic en el boton para seleccionarla manualmente</p>
+  <button class="pick-btn" id="pick-btn" type="button">&#128193; Seleccionar carpeta</button>
 </div>
 
 <div id="prog">
-  <div class="ph"><span id="plbl">Procesando…</span><span id="pcnt">0/0</span></div>
+  <div class="ph"><span id="plbl">Procesando&#8230;</span><span id="pcnt">0/0</span></div>
   <div class="pt"><div class="pf" id="pfill"></div></div>
   <div class="log" id="plog"></div>
 </div>
@@ -255,7 +260,7 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
 <div id="results">
   <div class="print-hdr" id="phdr"></div>
 
-  <p class="sec">Resumen del día</p>
+  <p class="sec">Resumen del dia</p>
   <div class="cards">
     <div class="card ef"><div class="cl">Efectivo</div><div class="cv" id="s-ef">$0</div><div class="cs" id="n-ef">0 facturas</div></div>
     <div class="card tr"><div class="cl">Transferencia</div><div class="cv" id="s-tr">$0</div><div class="cs" id="n-tr">0 facturas</div></div>
@@ -263,29 +268,30 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
     <div class="card mx"><div class="cl">Mixto</div><div class="cv" id="s-mx">$0</div><div class="cs" id="n-mx">0 facturas</div></div>
   </div>
 
-  <p class="sec">Detalle por método de pago</p>
+  <p class="sec">Detalle por metodo de pago</p>
   <div class="tbl-wrap">
-    <div class="tbl-hdr"><b id="thdr">Facturas del día</b><span id="tsub"></span></div>
+    <div class="tbl-hdr"><b id="thdr">Facturas del dia</b><span id="tsub"></span></div>
     <div class="cols" id="cols"></div>
   </div>
 
+  <!-- EDITOR DE FACTURAS -->
   <div id="edit-sec">
-    <p class="sec">Corregir método de pago</p>
+    <p class="sec">Corregir facturas</p>
     <div class="edit-box">
       <div class="edit-head">
-        <strong>Editar facturas leídas</strong>
+        <strong>Editar facturas leidas</strong>
         <span id="edit-count">0 factura(s) cargada(s)</span>
       </div>
-      <div class="edit-note">Si la caja marcó un método distinto al que realmente usó el cliente, cámbialo aquí y el resumen, las exportaciones y la impresión se actualizan. Si eliges mixto, al guardar se pedirá el desglose.</div>
+      <div class="edit-note">Corrige el metodo de pago si la caja lo marco mal, o ajusta el total para descontar fletes y transportes que no entran en las cuentas de la empresa. Tambien puedes eliminar una factura que no deba contarse.</div>
       <div class="edit-list" id="edit-list">
-        <div class="edit-empty">Las facturas procesadas aparecerán aquí.</div>
+        <div class="edit-empty">Las facturas procesadas apareceran aqui.</div>
       </div>
     </div>
   </div>
 
   <div class="totals">
     <div class="tbox vt">
-      <div><div class="tl">Total Venta del Día</div><div class="ts" id="tvsub">—</div></div>
+      <div><div class="tl">Total Venta del Dia</div><div class="ts" id="tvsub">&#8212;</div></div>
       <div class="tv2" id="tvval">$0</div>
     </div>
     <div class="tbox et">
@@ -295,15 +301,13 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
   </div>
 
   <div id="gastos-sec">
-    <p class="sec">💰 Gastos del día</p>
+    <p class="sec">Gastos del dia</p>
     <div class="gastos-box">
-      <h3>
-        <span>Registrar gastos a descontar</span>
-      </h3>
+      <h3><span>Registrar gastos a descontar</span></h3>
       <div class="add-gasto-form">
-        <input type="text" id="gasto-desc" placeholder="Descripción del gasto" />
+        <input type="text" id="gasto-desc" placeholder="Descripcion del gasto" />
         <input type="number" id="gasto-monto" placeholder="Monto" min="0" step="100" />
-        <button type="button" onclick="agregarGasto()">➕ Agregar</button>
+        <button type="button" onclick="agregarGasto()">Agregar</button>
       </div>
       <div id="gastos-list">
         <div class="gastos-empty">Sin gastos registrados</div>
@@ -312,86 +316,67 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
   </div>
 
   <div id="unk">
-    <p class="sec">⚠ Sin método detectado — clasificar manualmente</p>
-    <div class="wb"><h3>Estas facturas requieren clasificación manual</h3><div id="ulist"></div></div>
+    <p class="sec">Sin metodo detectado &#8212; clasificar manualmente</p>
+    <div class="wb"><h3>Estas facturas requieren clasificacion manual</h3><div id="ulist"></div></div>
   </div>
 
   <div class="actions">
-    <button class="btn bp" id="btn-txt"  type="button">📄 Exportar TXT</button>
-    <button class="btn bs" id="btn-csv"  type="button">⬇ Exportar CSV</button>
-    <button class="btn bs" id="btn-print"type="button">🖨 Imprimir</button>
-    <button class="btn br" id="btn-reset"type="button">✕ Nuevo cierre</button>
+    <button class="btn bp" id="btn-txt"   type="button">Exportar TXT</button>
+    <button class="btn bs" id="btn-csv"   type="button">Exportar CSV</button>
+    <button class="btn bs" id="btn-print" type="button">Imprimir</button>
+    <button class="btn br" id="btn-reset" type="button">Nuevo cierre</button>
   </div>
 </div>
 
-<footer>Todo el procesamiento ocurre en tu navegador — ningún archivo sale de tu computadora.</footer>
-</div><!-- Fin main-content -->
-
-</div><!-- Fin wrap -->
+<footer>Todo el procesamiento ocurre en tu navegador &#8212; ningun archivo sale de tu computadora.</footer>
+</div><!-- fin main-content -->
+</div><!-- fin wrap -->
 
 <script>
-// ── Globals ──────────────────────────────────────────────────────────
+// ── Globals ──────────────────────────────────────────────────────────────
 var invoices = [];
-var gastos = []; // {descripcion: string, monto: number}
-var today = new Date();
-var dateStr = today.toLocaleDateString('es-CO', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
-var selectedSede = null; // 'nevada' o 'novena'
-var PAYMENT_METHODS = ['efectivo', 'transferencia', 'tarjeta', 'mixto'];
-var PAYMENT_LABELS = {
-  efectivo: 'Efectivo',
-  transferencia: 'Transferencia',
-  tarjeta: 'Tarjeta',
-  mixto: 'Mixto',
-  desconocido: 'Sin detectar'
-};
-var MIXTO_PART_LABELS = {
-  efectivo: 'Efectivo',
-  transferencia: 'Transferencia',
-  tarjeta: 'Tarjeta'
-};
+var gastos   = [];
+var today    = new Date();
+var dateStr  = today.toLocaleDateString('es-CO', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+var selectedSede = null;
+var PAYMENT_METHODS = ['efectivo','transferencia','tarjeta','mixto'];
+var PAYMENT_LABELS  = {efectivo:'Efectivo',transferencia:'Transferencia',tarjeta:'Tarjeta',mixto:'Mixto',desconocido:'Sin detectar'};
+var MIXTO_PART_LABELS = {efectivo:'Efectivo',transferencia:'Transferencia',tarjeta:'Tarjeta'};
 
 document.getElementById('dchip').textContent = dateStr;
 document.getElementById('phdr').textContent  = 'CIERRE DE VENTAS — ' + dateStr.toUpperCase();
 
-// ── Selección de sede ────────────────────────────────────────────────
+// ── Sede ─────────────────────────────────────────────────────────────────
 function selectSede(sede) {
   selectedSede = sede;
   document.getElementById('sede-selector').style.display = 'none';
-  document.getElementById('main-content').style.display = 'block';
-  
-  var sedeName = sede === 'nevada' ? '🎫 Sede: La Nevada (Impresión térmica)' : '📄 Sede: Novena - La Paz (Impresión estándar)';
-  document.getElementById('sede-name').textContent = sedeName;
+  document.getElementById('main-content').style.display  = 'block';
+  var label = sede === 'nevada' ? 'Sede: La Nevada (Impresion termica 80mm)' : 'Sede: Novena - La Paz (Impresion A4)';
+  document.getElementById('sede-name').textContent = label;
 }
 
 function changeSede() {
   if (invoices.length > 0) {
-    if (!confirm('¿Seguro que quieres cambiar de sede? Se perderán los datos procesados.')) return;
-    invoices = [];
-    gastos = [];
-    document.getElementById('dz').style.display = 'block';
+    if (!confirm('Seguro que quieres cambiar de sede? Se perderan los datos procesados.')) return;
+    invoices = []; gastos = [];
+    document.getElementById('dz').style.display      = 'block';
     document.getElementById('results').style.display = 'none';
-    document.getElementById('prog').style.display = 'none';
-    document.getElementById('folder-input').value = '';
+    document.getElementById('prog').style.display    = 'none';
+    document.getElementById('folder-input').value    = '';
   }
   selectedSede = null;
-  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('main-content').style.display  = 'none';
   document.getElementById('sede-selector').style.display = 'flex';
 }
 
-// ── Gestión de gastos ───────────────────────────────────────────────
+// ── Gastos ───────────────────────────────────────────────────────────────
 function agregarGasto() {
-  var desc = document.getElementById('gasto-desc').value.trim();
+  var desc  = document.getElementById('gasto-desc').value.trim();
   var monto = parseFloat(document.getElementById('gasto-monto').value || 0);
-  
-  if (!desc || monto <= 0) {
-    alert('Ingresa una descripción y un monto válido para el gasto.');
-    return;
-  }
-  
+  if (!desc || monto <= 0) { alert('Ingresa una descripcion y un monto valido.'); return; }
   gastos.push({descripcion: desc, monto: monto});
-  document.getElementById('gasto-desc').value = '';
+  document.getElementById('gasto-desc').value  = '';
   document.getElementById('gasto-monto').value = '';
-  
   actualizarGastos();
 }
 
@@ -402,46 +387,32 @@ function eliminarGasto(index) {
 
 function actualizarGastos() {
   var list = document.getElementById('gastos-list');
-  
-  if (gastos.length === 0) {
+  if (!gastos.length) {
     list.innerHTML = '<div class="gastos-empty">Sin gastos registrados</div>';
   } else {
     var html = '';
     gastos.forEach(function(g, i) {
-      html += '<div class="gasto-row">';
-      html += '<span class="gasto-desc">'+g.descripcion+'</span>';
-      html += '<span class="gasto-amt">'+fmt(g.monto)+'</span>';
-      html += '<button class="gasto-del" onclick="eliminarGasto('+i+')">✕</button>';
-      html += '</div>';
+      html += '<div class="gasto-row">'
+        + '<span class="gasto-desc">'+g.descripcion+'</span>'
+        + '<span class="gasto-amt">'+fmt(g.monto)+'</span>'
+        + '<button class="gasto-del" onclick="eliminarGasto('+i+')">X</button>'
+        + '</div>';
     });
-    
-    var totalGastos = gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
-    html += '<div class="gastos-total">';
-    html += '<span class="lbl">Total Gastos:</span>';
-    html += '<span class="val">'+fmt(totalGastos)+'</span>';
-    html += '</div>';
-    
+    var totalGastos = gastos.reduce(function(s,g){ return s+g.monto; }, 0);
+    html += '<div class="gastos-total"><span class="lbl">Total Gastos:</span><span class="val">'+fmt(totalGastos)+'</span></div>';
     list.innerHTML = html;
   }
-  
-  // Actualizar efectivo a entregar
   actualizarEfectivoEntregar();
 }
 
 function actualizarEfectivoEntregar() {
-  var totalGastos = getTotalGastos();
+  var totalGastos  = getTotalGastos();
   var efectivoFinal = getNetCashToDeliver();
-  
-  document.getElementById('teval').textContent = fmt(efectivoFinal);
-  
-  if (totalGastos > 0) {
-    document.getElementById('ef-desc').textContent = 'Segun metodos corregidos - Gastos';
-  } else {
-    document.getElementById('ef-desc').textContent = 'Segun metodos corregidos';
-  }
+  document.getElementById('teval').textContent   = fmt(efectivoFinal);
+  document.getElementById('ef-desc').textContent = totalGastos > 0 ? 'Segun metodos corregidos - Gastos' : 'Segun metodos corregidos';
 }
 
-// ── PDF.js worker ────────────────────────────────────────────────────
+// ── PDF.js worker ─────────────────────────────────────────────────────────
 function initPDFjs() {
   if (typeof pdfjsLib !== 'undefined') {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -450,39 +421,29 @@ function initPDFjs() {
   return false;
 }
 
-// ── Format number ────────────────────────────────────────────────────
+// ── Helpers de formato ────────────────────────────────────────────────────
 function fmt(n) {
   if (!n || isNaN(n)) return '$\u00A00';
   return '$\u00A0' + Math.round(n).toLocaleString('es-CO');
 }
-
-function getMethodLabel(method) {
-  return PAYMENT_LABELS[method] || method || 'Sin detectar';
+function getMethodLabel(m) { return PAYMENT_LABELS[m] || m || 'Sin detectar'; }
+function escapeHTML(v) {
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-function escapeHTML(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
+// ── Normalizar factura ────────────────────────────────────────────────────
 function normalizeInvoice(inv) {
   if (!inv) return null;
-
-  if (typeof inv.total !== 'number' || isNaN(inv.total)) inv.total = 0;
+  if (typeof inv.total   !== 'number' || isNaN(inv.total))    inv.total    = 0;
   if (typeof inv.cashPart !== 'number' || isNaN(inv.cashPart)) inv.cashPart = 0;
   if (!inv.baseName) {
     inv.baseName = inv.isMixtoPart
-      ? String(inv.name || '').replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)$/, '')
-      : String(inv.name || '');
+      ? String(inv.name||'').replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)$/,'')
+      : String(inv.name||'');
   }
-
-  inv.mixtoEf = Number(inv.mixtoEf) || 0;
-  inv.mixtoTr = Number(inv.mixtoTr) || 0;
-  inv.mixtoTa = Number(inv.mixtoTa) || 0;
+  inv.mixtoEf = Number(inv.mixtoEf)||0;
+  inv.mixtoTr = Number(inv.mixtoTr)||0;
+  inv.mixtoTa = Number(inv.mixtoTa)||0;
 
   if (inv.method === 'efectivo') {
     inv.cashPart = inv.total;
@@ -504,280 +465,251 @@ function normalizeInvoice(inv) {
   } else {
     inv.name = inv.baseName;
   }
-
   return inv;
 }
 
-function normalizeInvoices() {
-  invoices.forEach(function(inv) {
-    normalizeInvoice(inv);
-  });
-}
+function normalizeInvoices() { invoices.forEach(function(i){ normalizeInvoice(i); }); }
 
-function getTotalGastos() {
-  return gastos.reduce(function(sum, g) { return sum + g.monto; }, 0);
-}
+function getTotalGastos() { return gastos.reduce(function(s,g){ return s+g.monto; },0); }
 
 function getCashTotal() {
   normalizeInvoices();
-  return invoices.reduce(function(sum, inv) {
-    if (inv.method === 'error' || inv.method === 'desconocido') return sum;
-    return sum + (Number(inv.cashPart) || 0);
-  }, 0);
+  return invoices.reduce(function(s,inv){
+    if (inv.method==='error'||inv.method==='desconocido') return s;
+    return s+(Number(inv.cashPart)||0);
+  },0);
 }
 
-function getNetCashToDeliver() {
-  return getCashTotal() - getTotalGastos();
-}
+function getNetCashToDeliver() { return getCashTotal() - getTotalGastos(); }
 
 function getEditableMethods(inv) {
-  var methods = inv && inv.isMixtoPart ? ['efectivo', 'transferencia', 'tarjeta'] : PAYMENT_METHODS.slice();
+  var methods = inv && inv.isMixtoPart ? ['efectivo','transferencia','tarjeta'] : PAYMENT_METHODS.slice();
   if (inv && methods.indexOf(inv.method) === -1) methods.unshift(inv.method);
   return methods;
 }
 
 function parseMoneyInput(value) {
-  if (value === null || value === undefined) return NaN;
-  if (typeof value === 'number') return value;
-
-  var cleaned = String(value).trim().replace(/\$/g, '').replace(/\s+/g, '');
+  if (value===null||value===undefined) return NaN;
+  if (typeof value==='number') return value;
+  var cleaned = String(value).trim().replace(/\$/g,'').replace(/\s+/g,'');
   if (!cleaned) return 0;
-
-  var parsed = parseFloat(cleaned.replace(/\./g, '').replace(',', '.'));
+  var parsed = parseFloat(cleaned.replace(/\./g,'').replace(',','.'));
   return isNaN(parsed) ? NaN : parsed;
 }
 
 function requestMixtoBreakdown(total, current) {
   var defaults = current || {};
-  var efRaw = prompt('Pago mixto\nTotal de la factura: ' + fmt(total) + '\n\nIngresa cuanto fue en efectivo:', defaults.efectivo ? String(defaults.efectivo) : '');
-  if (efRaw === null) return null;
-
-  var trRaw = prompt('Pago mixto\nTotal de la factura: ' + fmt(total) + '\n\nIngresa cuanto fue por transferencia:', defaults.transferencia ? String(defaults.transferencia) : '');
-  if (trRaw === null) return null;
-
-  var taRaw = prompt('Pago mixto\nTotal de la factura: ' + fmt(total) + '\n\nIngresa cuanto fue por tarjeta:', defaults.tarjeta ? String(defaults.tarjeta) : '');
-  if (taRaw === null) return null;
-
-  var breakdown = {
-    efectivo: parseMoneyInput(efRaw),
-    transferencia: parseMoneyInput(trRaw),
-    tarjeta: parseMoneyInput(taRaw)
-  };
-  var keys = ['efectivo', 'transferencia', 'tarjeta'];
-
-  for (var i = 0; i < keys.length; i++) {
-    var amount = breakdown[keys[i]];
-    if (isNaN(amount) || amount < 0) {
-      alert('Los valores del pago mixto deben ser numeros validos y no pueden ser negativos.');
-      return null;
-    }
+  var efRaw = prompt('Pago mixto\nTotal: '+fmt(total)+'\n\nCuanto fue en efectivo:', defaults.efectivo||'');
+  if (efRaw===null) return null;
+  var trRaw = prompt('Pago mixto\nTotal: '+fmt(total)+'\n\nCuanto fue por transferencia:', defaults.transferencia||'');
+  if (trRaw===null) return null;
+  var taRaw = prompt('Pago mixto\nTotal: '+fmt(total)+'\n\nCuanto fue por tarjeta:', defaults.tarjeta||'');
+  if (taRaw===null) return null;
+  var bd = {efectivo:parseMoneyInput(efRaw), transferencia:parseMoneyInput(trRaw), tarjeta:parseMoneyInput(taRaw)};
+  var keys = ['efectivo','transferencia','tarjeta'];
+  for (var i=0;i<keys.length;i++) {
+    if (isNaN(bd[keys[i]])||bd[keys[i]]<0) { alert('Los valores deben ser numeros validos y no negativos.'); return null; }
   }
-
-  var positiveCount = keys.filter(function(key) { return breakdown[key] > 0; }).length;
-  var sum = breakdown.efectivo + breakdown.transferencia + breakdown.tarjeta;
-
-  if (positiveCount < 2) {
-    alert('Un pago mixto debe repartirse en al menos dos metodos de pago.');
-    return null;
-  }
-
-  if (Math.abs(sum - total) > 0.01) {
-    alert('La suma del pago mixto debe coincidir con el total de la factura: ' + fmt(total));
-    return null;
-  }
-
-  return breakdown;
+  if (keys.filter(function(k){return bd[k]>0;}).length < 2) { alert('Un pago mixto debe repartirse en al menos dos metodos.'); return null; }
+  var sum = bd.efectivo+bd.transferencia+bd.tarjeta;
+  if (Math.abs(sum-total)>0.01) { alert('La suma del pago mixto debe coincidir con el total: '+fmt(total)); return null; }
+  return bd;
 }
 
 function buildInvoiceRecord(baseName, method, total) {
-  return normalizeInvoice({
-    name: baseName,
-    baseName: baseName,
-    method: method,
-    total: total,
-    cashPart: method === 'efectivo' ? total : 0,
-    mixtoEf: 0,
-    mixtoTr: 0,
-    mixtoTa: 0,
-    isMixtoPart: false
-  });
+  return normalizeInvoice({name:baseName,baseName:baseName,method:method,total:total,cashPart:method==='efectivo'?total:0,mixtoEf:0,mixtoTr:0,mixtoTa:0,isMixtoPart:false});
 }
 
 function buildMixtoPartInvoices(baseName, breakdown) {
-  var defs = [
-    {method: 'efectivo', label: 'Efectivo'},
-    {method: 'transferencia', label: 'Transferencia'},
-    {method: 'tarjeta', label: 'Tarjeta'}
-  ];
-
-  return defs.reduce(function(parts, def) {
-    var amount = breakdown[def.method] || 0;
-    if (amount > 0) {
-      parts.push(normalizeInvoice({
-        name: baseName + ' (' + def.label + ')',
-        baseName: baseName,
-        method: def.method,
-        total: amount,
-        cashPart: def.method === 'efectivo' ? amount : 0,
-        mixtoEf: 0,
-        mixtoTr: 0,
-        mixtoTa: 0,
-        isMixtoPart: true
-      }));
-    }
+  return [{method:'efectivo',label:'Efectivo'},{method:'transferencia',label:'Transferencia'},{method:'tarjeta',label:'Tarjeta'}].reduce(function(parts,def){
+    var amount = breakdown[def.method]||0;
+    if (amount>0) parts.push(normalizeInvoice({name:baseName+' ('+def.label+')',baseName:baseName,method:def.method,total:amount,cashPart:def.method==='efectivo'?amount:0,mixtoEf:0,mixtoTr:0,mixtoTa:0,isMixtoPart:true}));
     return parts;
-  }, []);
+  },[]);
 }
 
+// ── Editor de facturas ────────────────────────────────────────────────────
 function renderInvoiceEditor() {
-  var list = document.getElementById('edit-list');
+  var list  = document.getElementById('edit-list');
   var count = document.getElementById('edit-count');
-  if (!list || !count) return;
+  if (!list||!count) return;
 
   normalizeInvoices();
 
-  var editableInvoices = invoices.reduce(function(acc, inv, index) {
-    if (inv.method !== 'error') {
-      acc.push({invoice: inv, index: index});
-    }
+  var editable = invoices.reduce(function(acc,inv,index){
+    if (inv.method !== 'error') acc.push({invoice:inv, index:index});
     return acc;
-  }, []);
+  },[]);
 
-  count.textContent = editableInvoices.length + ' factura(s) cargada(s)';
+  count.textContent = editable.length + ' factura(s) cargada(s)';
 
-  if (!editableInvoices.length) {
+  if (!editable.length) {
     list.innerHTML = '<div class="edit-empty">Las facturas procesadas apareceran aqui.</div>';
     return;
   }
 
   var html = '';
-  editableInvoices.forEach(function(item) {
+  editable.forEach(function(item) {
     var inv = item.invoice;
-    var invoiceIndex = item.index;
-    var options = getEditableMethods(inv).map(function(method) {
-      return '<option value="' + method + '"' + (method === inv.method ? ' selected' : '') + '>'
-        + escapeHTML(getMethodLabel(method))
-        + '</option>';
+    var idx = item.index;
+    var badge = (inv._editedTotal||inv._editedMethod) ? '<span class="edit-badge modified">modificada</span>' : '';
+    var originalTotal = inv._originalTotal !== undefined ? inv._originalTotal : inv.total;
+    var totalDisplay  = inv._editedTotal
+      ? 'Orig: '+escapeHTML(fmt(originalTotal))+' | Ajustado: '+escapeHTML(fmt(inv.total))
+      : 'Total: '+escapeHTML(fmt(inv.total));
+
+    var methodOpts = getEditableMethods(inv).map(function(m){
+      return '<option value="'+m+'"'+(m===inv.method?' selected':'')+'>'+escapeHTML(getMethodLabel(m))+'</option>';
     }).join('');
 
-    html += '<div class="edit-row">';
-    html += '  <div class="edit-main">';
-    html += '    <div class="edit-name">' + escapeHTML(inv.name) + '</div>';
-    html += '    <div class="edit-meta">Metodo actual: ' + escapeHTML(getMethodLabel(inv.method)) + ' | Total: ' + escapeHTML(fmt(inv.total)) + (inv.isMixtoPart ? ' | Parte de mixto' : '') + '</div>';
-    html += '  </div>';
-    html += '  <div class="edit-actions">';
-    html += '    <select class="edit-select" id="edit-method-' + invoiceIndex + '">' + options + '</select>';
-    html += '    <button class="edit-save" type="button" onclick="applyInvoiceMethodChange(' + invoiceIndex + ')">Guardar</button>';
-    html += '  </div>';
+    html += '<div class="edit-row" id="erow-'+idx+'">';
+    html +=   '<div class="edit-row-top">';
+    html +=     '<div class="edit-main">';
+    html +=       '<div class="edit-name">'+escapeHTML(inv.name.replace(/\.pdf$/i,''))+badge+'</div>';
+    html +=       '<div class="edit-meta">'+escapeHTML(getMethodLabel(inv.method))+(inv.isMixtoPart?' &middot; parte de mixto':'')+' &middot; '+totalDisplay+'</div>';
+    html +=       (inv._editedTotal ? '<div class="edit-flete-note">Ajuste activo &mdash; flete u otro descuento aplicado</div>' : '');
+    html +=     '</div>';
+    html +=     '<button class="edit-del" type="button" onclick="removeInvoice('+idx+')" title="Eliminar esta factura del cierre">Eliminar</button>';
+    html +=   '</div>';
+    html +=   '<div class="edit-controls">';
+    html +=     '<select class="edit-select" id="edit-method-'+idx+'">'+methodOpts+'</select>';
+    html +=     '<input class="edit-total-input" type="number" id="edit-total-'+idx+'" min="0" step="100" value="'+Math.round(inv.total)+'" title="Edita el total para descontar flete u otros montos">';
+    html +=     '<button class="edit-save" type="button" onclick="applyInvoiceEdit('+idx+')">Guardar</button>';
+    html +=   '</div>';
     html += '</div>';
   });
 
   list.innerHTML = html;
 }
 
-function applyInvoiceMethodChange(index) {
-  normalizeInvoices();
-
+function removeInvoice(index) {
   var inv = invoices[index];
-  var select = document.getElementById('edit-method-' + index);
-  if (!inv || !select) return;
+  if (!inv) return;
+  var name = (inv.name||'').replace(/\.pdf$/i,'');
+  if (!confirm('Eliminar "'+name+'" del cierre?\nEsta factura no se sumara al total del dia.')) return;
+  invoices.splice(index,1);
+  renderResults();
+}
 
-  var newMethod = select.value;
-  if (!newMethod) {
-    alert('Selecciona un metodo de pago.');
-    return;
+function applyInvoiceEdit(index) {
+  normalizeInvoices();
+  var inv      = invoices[index];
+  var selectEl = document.getElementById('edit-method-'+index);
+  var totalEl  = document.getElementById('edit-total-'+index);
+  if (!inv||!selectEl||!totalEl) return;
+
+  var newMethod   = selectEl.value;
+  var newTotalRaw = parseFloat(totalEl.value);
+
+  if (!newMethod) { alert('Selecciona un metodo de pago.'); return; }
+  if (getEditableMethods(inv).indexOf(newMethod)===-1) { alert('Ese metodo no aplica para esta factura.'); return; }
+  if (isNaN(newTotalRaw)||newTotalRaw<0) { alert('Ingresa un total valido (mayor o igual a cero).'); return; }
+
+  if (inv._originalTotal === undefined) inv._originalTotal = inv.total;
+
+  var totalChanged  = Math.abs(newTotalRaw - inv.total) > 0.5;
+  var methodChanged = newMethod !== inv.method;
+  if (!totalChanged && !methodChanged) return;
+
+  if (totalChanged) {
+    if (newTotalRaw === 0) {
+      if (!confirm('El total es 0. Esto eliminara la factura del cierre. Continuar?')) return;
+      invoices.splice(index,1);
+      renderResults();
+      return;
+    }
+    inv.total        = newTotalRaw;
+    inv._editedTotal = true;
   }
 
-  if (getEditableMethods(inv).indexOf(newMethod) === -1) {
-    alert('Ese metodo no aplica para esta factura.');
-    return;
-  }
-
-  if (newMethod === 'mixto' && !inv.isMixtoPart) {
-    var breakdown = requestMixtoBreakdown(inv.total, {
-      efectivo: inv.mixtoEf,
-      transferencia: inv.mixtoTr,
-      tarjeta: inv.mixtoTa
-    });
-    if (!breakdown) return;
-
-    var parts = buildMixtoPartInvoices(inv.baseName || inv.name, breakdown);
-    Array.prototype.splice.apply(invoices, [index, 1].concat(parts));
-    renderResults();
-    return;
-  }
-
-  if (inv.method === newMethod) return;
-
-  inv.method = newMethod;
-
-  if (!inv.isMixtoPart && newMethod !== 'mixto') {
-    inv.mixtoEf = 0;
-    inv.mixtoTr = 0;
-    inv.mixtoTa = 0;
+  if (methodChanged) {
+    if (newMethod==='mixto' && !inv.isMixtoPart) {
+      var breakdown = requestMixtoBreakdown(inv.total,{efectivo:inv.mixtoEf,transferencia:inv.mixtoTr,tarjeta:inv.mixtoTa});
+      if (!breakdown) return;
+      var parts = buildMixtoPartInvoices(inv.baseName||inv.name, breakdown);
+      parts.forEach(function(p){
+        if (inv._originalTotal!==undefined) p._originalTotal = inv._originalTotal;
+        if (inv._editedTotal) p._editedTotal = true;
+      });
+      Array.prototype.splice.apply(invoices,[index,1].concat(parts));
+      renderResults();
+      return;
+    }
+    inv.method        = newMethod;
+    inv._editedMethod = true;
+    if (!inv.isMixtoPart && newMethod!=='mixto') { inv.mixtoEf=0; inv.mixtoTr=0; inv.mixtoTa=0; }
   }
 
   normalizeInvoice(inv);
   renderResults();
 }
 
-// ── BUTTON: Select folder ────────────────────────────────────────────
-document.getElementById('pick-btn').addEventListener('click', function() {
-  document.getElementById('folder-input').click();
-});
-
-document.getElementById('folder-input').addEventListener('change', function(e) {
-  var files = Array.prototype.filter.call(e.target.files, function(f) {
-    return f.name.toLowerCase().endsWith('.pdf');
-  });
+// ── Botones de carpeta / drag-drop ────────────────────────────────────────
+document.getElementById('pick-btn').addEventListener('click', function(){ document.getElementById('folder-input').click(); });
+document.getElementById('folder-input').addEventListener('change', function(e){
+  var files = Array.prototype.filter.call(e.target.files, function(f){ return f.name.toLowerCase().endsWith('.pdf'); });
   if (files.length) processFiles(files);
 });
 
-// ── Drag & drop ──────────────────────────────────────────────────────
 var dz = document.getElementById('dz');
-dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('over'); });
-dz.addEventListener('dragleave', function() { dz.classList.remove('over'); });
-dz.addEventListener('drop', function(e) {
-  e.preventDefault();
-  dz.classList.remove('over');
+dz.addEventListener('dragover',  function(e){ e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', function(){  dz.classList.remove('over'); });
+dz.addEventListener('drop', function(e){
+  e.preventDefault(); dz.classList.remove('over');
   var files = [];
-  var items = Array.prototype.slice.call(e.dataTransfer.items || []);
-  var promises = items.map(function(item) {
+  var items = Array.prototype.slice.call(e.dataTransfer.items||[]);
+  var promises = items.map(function(item){
     var entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
     if (entry && entry.isDirectory) return readDir(entry, files);
     var f = item.getAsFile();
     if (f && f.name.toLowerCase().endsWith('.pdf')) files.push(f);
     return Promise.resolve();
   });
-  Promise.all(promises).then(function() { processFiles(files); });
+  Promise.all(promises).then(function(){ processFiles(files); });
 });
 
 function readDir(entry, files) {
-  return new Promise(function(res) {
-    entry.createReader().readEntries(function(entries) {
-      var ps = entries.map(function(e) {
+  return new Promise(function(res){
+    entry.createReader().readEntries(function(entries){
+      var ps = entries.map(function(e){
         if (e.isDirectory) return readDir(e, files);
-        return new Promise(function(r) {
-          e.file(function(f) { if (f.name.toLowerCase().endsWith('.pdf')) files.push(f); r(); });
-        });
+        return new Promise(function(r){ e.file(function(f){ if(f.name.toLowerCase().endsWith('.pdf')) files.push(f); r(); }); });
       });
       Promise.all(ps).then(res);
     });
   });
 }
 
-// ── PDF reading ──────────────────────────────────────────────────────
+// ── Lectura de PDF ────────────────────────────────────────────────────────
+// NOTA CRITICA: PDF.js devuelve el texto de la pagina como un array de items.
+// Cuando un numero como "$500.000" queda partido en dos items separados
+// ("Tr:$500" y ".000") el join con espacio produce "Tr:$500 .000", y los regex
+// solo capturan "500" en lugar de "500.000".
+// Solucion: si el item anterior termina en digito/punto/coma Y el siguiente
+// empieza igual, unirlos SIN espacio para reconstruir el numero completo.
 function readPDF(file) {
-  return file.arrayBuffer().then(function(buf) {
-    return pdfjsLib.getDocument({data: buf}).promise;
-  }).then(function(pdf) {
+  return file.arrayBuffer().then(function(buf){
+    return pdfjsLib.getDocument({data:buf}).promise;
+  }).then(function(pdf){
     var pages = [];
-    for (var i = 1; i <= pdf.numPages; i++) pages.push(i);
-    return pages.reduce(function(chain, i) {
-      return chain.then(function(text) {
-        return pdf.getPage(i).then(function(pg) {
-          return pg.getTextContent().then(function(ct) {
-            return text + ct.items.map(function(x) { return x.str; }).join(' ') + '\n';
+    for (var i=1;i<=pdf.numPages;i++) pages.push(i);
+    return pages.reduce(function(chain, pageNum){
+      return chain.then(function(text){
+        return pdf.getPage(pageNum).then(function(pg){
+          return pg.getTextContent().then(function(ct){
+            var items = ct.items;
+            var parts = [];
+            for (var j=0;j<items.length;j++) {
+              var s = items[j].str;
+              if (j===0) { parts.push(s); continue; }
+              var prev = parts[parts.length-1];
+              if (/[\d.,]$/.test(prev) && /^[\d.,]/.test(s)) {
+                parts[parts.length-1] = prev + s;   // fusionar parte de numero
+              } else {
+                parts.push(s);
+              }
+            }
+            return text + parts.join(' ') + '\n';
           });
         });
       });
@@ -785,61 +717,35 @@ function readPDF(file) {
   });
 }
 
-// ── Detection ────────────────────────────────────────────────────────
+// ── Deteccion de metodo y total ───────────────────────────────────────────
 function normalizeSearchText(text) {
-  return String(text || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return String(text||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,' ').replace(/\s+/g,' ').trim();
 }
 
 function getSectionWindow(text, anchors, before, after) {
-  var raw = String(text || '');
-  if (!raw) return '';
-
+  var raw = String(text||''); if (!raw) return '';
   var normalized = normalizeSearchText(raw);
   var startIdx = -1;
-
-  for (var i = 0; i < anchors.length; i++) {
+  for (var i=0;i<anchors.length;i++) {
     var idx = normalized.indexOf(anchors[i]);
-    if (idx !== -1 && (startIdx === -1 || idx < startIdx)) startIdx = idx;
+    if (idx !== -1 && (startIdx===-1||idx<startIdx)) startIdx = idx;
   }
-
-  if (startIdx === -1) return '';
-
-  var from = Math.max(0, startIdx - (before || 0));
-  var to = Math.min(raw.length, startIdx + (after || 0));
-  return raw.slice(from, to);
+  if (startIdx===-1) return '';
+  return raw.slice(Math.max(0,startIdx-(before||0)), Math.min(raw.length,startIdx+(after||0)));
 }
 
 function getPaymentSection(text) {
-  return getSectionWindow(
-    text,
-    ['metodo de pago', 'medio de pago', 'forma de pago', 'tipo de pago', 'metodo pago', 'medio pago', 'forma pago'],
-    40,
-    320
-  );
+  return getSectionWindow(text,['metodo de pago','medio de pago','forma de pago','tipo de pago','metodo pago','medio pago','forma pago'],40,320);
 }
 
 function getTotalSection(text) {
-  var raw = String(text || '');
-  if (!raw) return '';
-
+  var raw = String(text||''); if (!raw) return '';
   var normalized = normalizeSearchText(raw);
-  var labels = ['total a pagar', 'total neto', 'valor total', 'gran total', 'total factura', 'total'];
+  var labels = ['total a pagar','total neto','valor total','gran total','total factura','total'];
   var idx = -1;
-
-  for (var i = 0; i < labels.length; i++) {
-    var found = normalized.lastIndexOf(labels[i]);
-    if (found > idx) idx = found;
-  }
-
-  if (idx === -1) return '';
-  var from = Math.max(0, idx - 50);
-  var to = Math.min(raw.length, idx + 180);
-  return raw.slice(from, to);
+  for (var i=0;i<labels.length;i++) { var f = normalized.lastIndexOf(labels[i]); if (f>idx) idx=f; }
+  if (idx===-1) return '';
+  return raw.slice(Math.max(0,idx-50), Math.min(raw.length,idx+180));
 }
 
 function detectMethod(text) {
@@ -851,42 +757,27 @@ function detectMethod(text) {
   };
   var order = ['mixto','efectivo','transferencia','tarjeta'];
 
-  // Estrategia 1: Buscar en sección de método de pago si existe
   var paymentSection = getPaymentSection(text);
   if (paymentSection) {
     var t = normalizeSearchText(paymentSection);
-    for (var i = 0; i < order.length; i++) {
-      var m = order[i];
-      for (var j = 0; j < P[m].length; j++) {
-        if (P[m][j].test(t)) return m;
-      }
-    }
+    for (var i=0;i<order.length;i++) for (var j=0;j<P[order[i]].length;j++) if (P[order[i]][j].test(t)) return order[i];
   }
 
-  // Estrategia 2: Buscar en la sección de total (método de pago suele estar cerca)
   var totalSection = getTotalSection(text);
   if (totalSection) {
     var t2 = normalizeSearchText(totalSection);
-    for (var i2 = 0; i2 < order.length; i2++) {
-      var m2 = order[i2];
-      for (var j2 = 0; j2 < P[m2].length; j2++) {
-        if (P[m2][j2].test(t2)) return m2;
-      }
-    }
+    for (var i2=0;i2<order.length;i2++) for (var j2=0;j2<P[order[i2]].length;j2++) if (P[order[i2]][j2].test(t2)) return order[i2];
   }
 
-  // Estrategia 3: Buscar en la última mitad del documento (evita productos)
-  var lastHalf = text.substring(text.length / 2);
+  var lastHalf = text.substring(text.length/2);
   var t3 = normalizeSearchText(lastHalf);
-  for (var i3 = 0; i3 < order.length; i3++) {
+  for (var i3=0;i3<order.length;i3++) {
     var m3 = order[i3];
-    for (var j3 = 0; j3 < P[m3].length; j3++) {
-      // Solo acepta "mixt" si es muy explícito en contexto de pago
-      if (m3 === 'mixto' && !/(?:metodo|medio|forma|pago|desgl|divid)\s+.*mixt/.test(t3)) continue;
+    for (var j3=0;j3<P[m3].length;j3++) {
+      if (m3==='mixto' && !/(?:metodo|medio|forma|pago|desgl|divid)\s+.*mixt/.test(t3)) continue;
       if (P[m3][j3].test(t3)) return m3;
     }
   }
-
   return 'desconocido';
 }
 
@@ -899,60 +790,82 @@ function extractTotal(text) {
     /total\s*factura\s*[:\-]?\s*\$?\s*([\d.,]+)/i,
     /\btotal\s*[:\-]?\s*\$?\s*([\d.,]+)/i
   ];
-
   var matches = [];
-  
-  // Buscar en todo el texto (el total es importante detectarlo bien)
-  for (var i = 0; i < pats.length; i++) {
-    var gp = new RegExp(pats[i].source, 'gi');
-    var m;
-    while ((m = gp.exec(text)) !== null) {
+  for (var i=0;i<pats.length;i++) {
+    var gp = new RegExp(pats[i].source,'gi'), m;
+    while ((m=gp.exec(text))!==null) {
       var v = parseFloat(m[1].replace(/\./g,'').replace(',','.'));
-      if (!isNaN(v) && v > 0) {
-        var label = String(m[0] || '').toLowerCase();
-        if (label.indexOf('subtotal') !== -1) continue;
-        matches.push({ value: v, idx: m.index });
-      }
+      if (!isNaN(v)&&v>0&&String(m[0]).toLowerCase().indexOf('subtotal')===-1) matches.push({value:v,idx:m.index});
     }
   }
-
-  if (matches.length) {
-    matches.sort(function(a, b) { return a.idx - b.idx; });
-    return matches[matches.length - 1].value;
-  }
-
-  // Fallback: si no se encontró con patrones, buscar solo en sección de total
-  var totalSection = getTotalSection(text);
-  if (totalSection && totalSection !== text) {
-    for (var j = 0; j < pats.length; j++) {
-      var one = pats[j].exec(totalSection);
-      pats[j].lastIndex = 0;
-      if (one && one[1]) {
-        var fallback = parseFloat(one[1].replace(/\./g, '').replace(',', '.'));
-        if (!isNaN(fallback) && fallback > 0) return fallback;
-      }
+  if (matches.length) { matches.sort(function(a,b){return a.idx-b.idx;}); return matches[matches.length-1].value; }
+  var ts = getTotalSection(text);
+  if (ts && ts!==text) {
+    for (var j=0;j<pats.length;j++) {
+      var one = pats[j].exec(ts); pats[j].lastIndex=0;
+      if (one&&one[1]) { var fb=parseFloat(one[1].replace(/\./g,'').replace(',','.')); if (!isNaN(fb)&&fb>0) return fb; }
     }
   }
-
   return 0;
 }
 
 function extractCash(text) {
   var m = text.match(/efectivo\s*[:\-]?\s*\$?\s*([\d.,]+)/i);
-  if (m) { var v = parseFloat(m[1].replace(/\./g,'').replace(',','.')); if (v > 0) return v; }
+  if (m) { var v=parseFloat(m[1].replace(/\./g,'').replace(',','.')); if (v>0) return v; }
   return 0;
 }
 
-// ── Process files ────────────────────────────────────────────────────
+// ── Normalizar numero en formato colombiano ───────────────────────────────
+// Colombia: punto = miles, coma = decimal. Ej: 500.000 = quinientos mil.
+function parseColumbian(str) {
+  if (!str) return 0;
+  str = String(str).trim().replace(/\s/g,'').replace(/[^\d.,]/g,'');
+  if (!str) return 0;
+  var lastComma    = str.lastIndexOf(',');
+  var afterComma   = lastComma>=0 ? str.substring(lastComma+1) : '';
+  var isDecimal    = lastComma>=0 && afterComma.length>=1 && afterComma.length<=2;
+  str = str.replace(/\./g,'');
+  str = isDecimal ? str.replace(',','.') : str.replace(/,/g,'');
+  var v = parseFloat(str);
+  return (!isNaN(v)&&v>0) ? v : 0;
+}
+
+// ── Parseo del desglose MIXTO ─────────────────────────────────────────────
+// Formato de la factura: "MIXTO E:$300.600 T:$0 Tr:$500.000"
+// Regla clave: extraer Tr: ANTES que T: porque T es prefijo de Tr.
+// Se usa lookahead negativo T(?!r) para que T: nunca capture Tr:.
+function tryParseMixtoLine(area) {
+  // Colapsar digitos separados por espacios producidos por PDF.js
+  // "5 0 0 . 0 0 0" -> "500.000"
+  var normalized = area.replace(/(\d)\s+(?=[\d.,])/g,'$1');
+
+  var NUM = '[\\$]?\\s*([\\d.,]+)';
+  var rE  = new RegExp('\\bE\\s*:\\s*'  + NUM, 'i');
+  var rTr = new RegExp('\\bTr\\s*:\\s*' + NUM, 'i');  // Tr: primero
+  var rT  = new RegExp('\\bT(?!r)\\s*:\\s*' + NUM, 'i'); // T: solo si no va seguido de r
+
+  var mE  = normalized.match(rE);
+  var mTr = normalized.match(rTr);
+  var mT  = normalized.match(rT);
+
+  // Necesitamos al menos 2 campos para confirmar que es una linea MIXTO
+  var found = (mE?1:0)+(mTr?1:0)+(mT?1:0);
+  if (found < 2) return null;
+
+  return {
+    ef: mE  ? parseColumbian(mE[1])  : 0,
+    tr: mTr ? parseColumbian(mTr[1]) : 0,
+    ta: mT  ? parseColumbian(mT[1])  : 0
+  };
+}
+
+// ── Procesar archivos PDF ─────────────────────────────────────────────────
 function processFiles(files) {
   if (!files.length) return;
-  if (!initPDFjs()) {
-    alert('Error: No se pudo cargar PDF.js. Verifica tu conexión a internet e intenta recargar la página.');
-    return;
-  }
+  if (!initPDFjs()) { alert('No se pudo cargar PDF.js. Verifica tu conexion a internet.'); return; }
   invoices = [];
   dz.style.display = 'none';
-  document.getElementById('prog').style.display = 'block';
+  document.getElementById('prog').style.display    = 'block';
   document.getElementById('results').style.display = 'none';
 
   var pfill = document.getElementById('pfill');
@@ -961,273 +874,189 @@ function processFiles(files) {
   var plog  = document.getElementById('plog');
   plog.innerHTML = '';
 
-  function log(msg, cls) {
-    var d = document.createElement('div');
-    d.className = 'll ' + (cls || '');
-    d.textContent = msg;
-    plog.appendChild(d);
-    plog.scrollTop = plog.scrollHeight;
-  }
+  function log(msg,cls){ var d=document.createElement('div'); d.className='ll '+(cls||''); d.textContent=msg; plog.appendChild(d); plog.scrollTop=plog.scrollHeight; }
 
-  log('→ ' + files.length + ' PDF(s) encontrados', 'ok');
+  log('-> '+files.length+' PDF(s) encontrados','ok');
 
   var i = 0;
   function next() {
-    if (i >= files.length) {
-      log('✓ Listo', 'ok');
-      setTimeout(renderResults, 600);
-      return;
-    }
+    if (i >= files.length) { log('Listo','ok'); setTimeout(renderResults,600); return; }
     var f = files[i];
-    pcnt.textContent = (i+1) + '/' + files.length;
-    pfill.style.width = ((i+1)/files.length*100) + '%';
-    plbl.textContent = 'Leyendo ' + f.name + '…';
-    readPDF(f).then(function(text) {
+    pcnt.textContent  = (i+1)+'/'+files.length;
+    pfill.style.width = ((i+1)/files.length*100)+'%';
+    plbl.textContent  = 'Leyendo '+f.name+'...';
+
+    readPDF(f).then(function(text){
       var method = detectMethod(text);
       var total  = extractTotal(text);
-      var cash   = 0;
-      if (method === 'efectivo') cash = total;
       var mixtoEf = 0, mixtoTr = 0, mixtoTa = 0;
-      
-      // Si es mixto, extraer las partes y crear facturas individuales para cada método
+
       if (method === 'mixto') {
-        var paymentSection = getPaymentSection(text) || '';
-        var totalSection = getTotalSection(text) || '';
-        var lastHalf = text.substring(text.length / 2);
-        
-        // Combinar secciones para búsqueda (priorizar paymentSection, luego totalSection, luego última mitad)
-        var searchAreas = [paymentSection, totalSection, lastHalf];
-        
-        console.log('═══ PROCESANDO MIXTO:', f.name, '═══');
-        console.log('Seccion de pago:', paymentSection.substring(0, 200));
-        console.log('Seccion de total:', totalSection.substring(0, 200));
-        
-        // Intentar extraer efectivo con varios patrones más flexibles
-        // Buscar: E:, E =, Efectivo:, (E), etc.
-        for (var sa = 0; sa < searchAreas.length && mixtoEf === 0; sa++) {
-          var mEf = searchAreas[sa].match(/\be\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
-              searchAreas[sa].match(/efectivo\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-              searchAreas[sa].match(/efec\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
-              searchAreas[sa].match(/\(e\)\s*\$?\s*([\d.,]+)/i) ||
-              searchAreas[sa].match(/\be[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
-          if (mEf) { 
-            var vEf = parseFloat(mEf[1].replace(/\./g,'').replace(',','.')); 
-            if (!isNaN(vEf) && vEf > 0) {
-              mixtoEf = vEf;
-              console.log('✓ Efectivo detectado:', vEf, '- Match:', mEf[0]);
-            }
+        var paymentSection = getPaymentSection(text)||'';
+        var totalSection   = getTotalSection(text)||'';
+        var lastHalf       = text.substring(text.length/2);
+        var searchAreas    = [paymentSection, totalSection, lastHalf];
+
+        // Estrategia 1: parsear la linea MIXTO completa (mas confiable)
+        var lineResult = null;
+        for (var sLine=0;sLine<searchAreas.length&&!lineResult;sLine++) {
+          lineResult = tryParseMixtoLine(searchAreas[sLine]);
+        }
+        if (lineResult) {
+          mixtoEf = lineResult.ef||0;
+          mixtoTr = lineResult.tr||0;
+          mixtoTa = lineResult.ta||0;
+        }
+
+        // Estrategia 2: fallback campo por campo (solo si estrategia 1 no encontro nada)
+        if (mixtoEf===0 && mixtoTr===0 && mixtoTa===0) {
+          function normArea(a){ return a.replace(/(\d)\s+(?=[\d.,])/g,'$1'); }
+
+          for (var sa=0;sa<searchAreas.length&&mixtoEf===0;sa++) {
+            var mEf = normArea(searchAreas[sa]).match(/\bE\s*:\s*\$?\s*([\d.,]+)/i)
+                   || normArea(searchAreas[sa]).match(/efectivo\s*[:=\-]\s*\$?\s*([\d.,]+)/i);
+            if (mEf){ var vEf=parseColumbian(mEf[1]); if(vEf>0) mixtoEf=vEf; }
+          }
+
+          for (var sa2=0;sa2<searchAreas.length&&mixtoTr===0;sa2++) {
+            var mTr = normArea(searchAreas[sa2]).match(/\bTr\s*:\s*\$?\s*([\d.,]+)/i)
+                   || normArea(searchAreas[sa2]).match(/trans(?:f(?:erencia)?)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i);
+            if (mTr){ var vTr=parseColumbian(mTr[1]); if(vTr>0) mixtoTr=vTr; }
+          }
+
+          for (var sa3=0;sa3<searchAreas.length&&mixtoTa===0;sa3++) {
+            var mTa = normArea(searchAreas[sa3]).match(/\bT(?!r)\s*:\s*\$?\s*([\d.,]+)/i)
+                   || normArea(searchAreas[sa3]).match(/tarj(?:eta)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i);
+            if (mTa){ var vTa=parseColumbian(mTa[1]); if(vTa>0) mixtoTa=vTa; }
           }
         }
-        
-        // Extraer transferencia con patrones más flexibles
-        for (var sa2 = 0; sa2 < searchAreas.length && mixtoTr === 0; sa2++) {
-          var mTr = searchAreas[sa2].match(/\btr\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
-              searchAreas[sa2].match(/trans(?:f|ferencia)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-              searchAreas[sa2].match(/\(tr\)\s*\$?\s*([\d.,]+)/i) ||
-              searchAreas[sa2].match(/\btr[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
-          if (mTr) { 
-            var vTr = parseFloat(mTr[1].replace(/\./g,'').replace(',','.')); 
-            if (!isNaN(vTr) && vTr > 0) {
-              mixtoTr = vTr;
-              console.log('✓ Transferencia detectada:', vTr, '- Match:', mTr[0]);
-            }
-          }
-        }
-        
-        // Extraer tarjeta - más cuidadoso para no confundir con Tr
-        for (var sa3 = 0; sa3 < searchAreas.length && mixtoTa === 0; sa3++) {
-          var tMatch = searchAreas[sa3].match(/[^r]\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) || 
-                 searchAreas[sa3].match(/^\s*t\s*[:=]\s*\$?\s*([\d.,]+)/i) ||
-                 searchAreas[sa3].match(/tarj(?:eta)?\s*[:=\-]\s*\$?\s*([\d.,]+)/i) ||
-                 searchAreas[sa3].match(/\(t\)\s*\$?\s*([\d.,]+)/i) ||
-                 searchAreas[sa3].match(/\nt[\s\n]*[:=]?[\s\n]*\$?[\s\n]*([\d.,]+)/i);
-          if (tMatch) { 
-            var vTa = parseFloat(tMatch[1].replace(/\./g,'').replace(',','.')); 
-            if (!isNaN(vTa) && vTa > 0) {
-              mixtoTa = vTa;
-              console.log('✓ Tarjeta detectada:', vTa, '- Match:', tMatch[0]);
-            }
-          }
-        }
-        
-        console.log('Resumen desglose - E:', mixtoEf, 'Tr:', mixtoTr, 'T:', mixtoTa);
-        
-        log('  🔍 Analizando MIXTO en ' + f.name + ':', 'ok');
-        log('    Seccion encontrada: ' + (paymentSection ? 'método de pago' : totalSection ? 'total' : 'última mitad'), 'ok');
-        
-        // Crear facturas separadas para cada componente del mixto
-        if (mixtoEf > 0) {
-          invoices.push({name: f.name + ' (Efectivo)', method: 'efectivo', total: mixtoEf, cashPart: mixtoEf, mixtoEf: 0, mixtoTr: 0, mixtoTa: 0, isMixtoPart: true});
-        }
-        if (mixtoTr > 0) {
-          invoices.push({name: f.name + ' (Transferencia)', method: 'transferencia', total: mixtoTr, cashPart: 0, mixtoEf: 0, mixtoTr: 0, mixtoTa: 0, isMixtoPart: true});
-        }
-        if (mixtoTa > 0) {
-          invoices.push({name: f.name + ' (Tarjeta)', method: 'tarjeta', total: mixtoTa, cashPart: 0, mixtoEf: 0, mixtoTr: 0, mixtoTa: 0, isMixtoPart: true});
-        }
-        
-        // Log del desglose
-        if (mixtoEf > 0 || mixtoTr > 0 || mixtoTa > 0) {
-          log('  ✓ ' + f.name + ' → MIXTO desglosado:', 'ok');
-          if (mixtoEf > 0) log('    ✓ Efectivo: ' + fmt(mixtoEf), 'ok');
-          if (mixtoTr > 0) log('    ✓ Transferencia: ' + fmt(mixtoTr), 'ok');
-          if (mixtoTa > 0) log('    ✓ Tarjeta: ' + fmt(mixtoTa), 'ok');
+
+        // Crear una sub-factura por cada componente del mixto
+        if (mixtoEf>0||mixtoTr>0||mixtoTa>0) {
+          var baseName = f.name;
+          if (mixtoEf>0) invoices.push(normalizeInvoice({name:baseName+' (Efectivo)',baseName:baseName,method:'efectivo',total:mixtoEf,cashPart:mixtoEf,mixtoEf:0,mixtoTr:0,mixtoTa:0,isMixtoPart:true}));
+          if (mixtoTr>0) invoices.push(normalizeInvoice({name:baseName+' (Transferencia)',baseName:baseName,method:'transferencia',total:mixtoTr,cashPart:0,mixtoEf:0,mixtoTr:0,mixtoTa:0,isMixtoPart:true}));
+          if (mixtoTa>0) invoices.push(normalizeInvoice({name:baseName+' (Tarjeta)',baseName:baseName,method:'tarjeta',total:mixtoTa,cashPart:0,mixtoEf:0,mixtoTr:0,mixtoTa:0,isMixtoPart:true}));
+          log('  '+f.name+' MIXTO | E:'+fmt(mixtoEf)+' Tr:'+fmt(mixtoTr)+' T:'+fmt(mixtoTa),'ok');
         } else {
-          // Si no se pudo desglosar, mantener como mixto original
-          invoices.push({name: f.name, method: method, total: total, cashPart: cash, mixtoEf: mixtoEf, mixtoTr: mixtoTr, mixtoTa: mixtoTa});
-          log('  ⚠ ' + f.name + ' → MIXTO sin desglose detectado | ' + fmt(total), 'warn');
+          invoices.push({name:f.name,method:method,total:total,cashPart:0,mixtoEf:0,mixtoTr:0,mixtoTa:0});
+          log('  '+f.name+' MIXTO sin desglose | '+fmt(total),'warn');
         }
+
       } else {
-        // Para métodos no mixtos, agregar normalmente
-        invoices.push({name: f.name, method: method, total: total, cashPart: cash, mixtoEf: mixtoEf, mixtoTr: mixtoTr, mixtoTa: mixtoTa});
-        log('  ' + (method !== 'desconocido' ? '✓' : '⚠') + ' ' + f.name + ' → ' + method.toUpperCase() + ' | ' + fmt(total),
-            method !== 'desconocido' ? 'ok' : 'warn');
+        var cash = method==='efectivo' ? total : 0;
+        invoices.push({name:f.name,method:method,total:total,cashPart:cash,mixtoEf:0,mixtoTr:0,mixtoTa:0});
+        log('  '+(method!=='desconocido'?'OK':'?')+' '+f.name+' -> '+method.toUpperCase()+' | '+fmt(total), method!=='desconocido'?'ok':'warn');
       }
+
       i++; next();
-    }).catch(function(err) {
-      log('  ✕ ' + f.name + ': ' + err.message, 'err');
-      invoices.push({name: f.name, method: 'error', total: 0, cashPart: 0});
+    }).catch(function(err){
+      log('  ERROR '+f.name+': '+err.message,'err');
+      invoices.push({name:f.name,method:'error',total:0,cashPart:0});
       i++; next();
     });
   }
   next();
 }
 
-// ── Render results ───────────────────────────────────────────────────
+// ── Render resultados ─────────────────────────────────────────────────────
 function renderResults() {
   normalizeInvoices();
-
-  document.getElementById('prog').style.display = 'none';
+  document.getElementById('prog').style.display    = 'none';
   document.getElementById('results').style.display = 'block';
 
-  var G = {efectivo:[], transferencia:[], tarjeta:[], mixto:[]};
-  var mixtosDesglosados = {}; // Para agrupar mixtos desglosados
-  var tV = 0, tE = 0, unk = [];
+  var G = {efectivo:[],transferencia:[],tarjeta:[],mixto:[]};
+  var mixtosDesglosados = {};
+  var tV=0, tE=0, unk=[];
 
-  invoices.forEach(function(inv) {
-    if (inv.method === 'error') return;
-    if (inv.method === 'desconocido') { unk.push(inv); return; }
-    
-    // Si es parte de un mixto desglosado, agregar a su método Y agrupar para tracking
+  invoices.forEach(function(inv){
+    if (inv.method==='error') return;
+    if (inv.method==='desconocido') { unk.push(inv); return; }
     if (inv.isMixtoPart) {
-      var originalName = inv.name.replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)/, '');
-      if (!mixtosDesglosados[originalName]) {
-        mixtosDesglosados[originalName] = {efectivo: 0, transferencia: 0, tarjeta: 0, total: 0};
-      }
-      mixtosDesglosados[originalName][inv.method] += inv.total;
-      mixtosDesglosados[originalName].total += inv.total;
-      
-      // IMPORTANTE: Agregar al grupo del método correspondiente para que se sume
+      var origName = inv.name.replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)/,'');
+      if (!mixtosDesglosados[origName]) mixtosDesglosados[origName]={efectivo:0,transferencia:0,tarjeta:0,total:0};
+      mixtosDesglosados[origName][inv.method] += inv.total;
+      mixtosDesglosados[origName].total       += inv.total;
       if (G[inv.method]) G[inv.method].push(inv);
     } else {
-      // Facturas normales
       if (G[inv.method]) G[inv.method].push(inv);
     }
-    
     tV += inv.total;
     tE += inv.cashPart;
   });
 
-  function sum(arr) { return arr.reduce(function(s,i) { return s+i.total; }, 0); }
-  function countPuras(arr) { return arr.filter(function(i) { return !i.isMixtoPart; }).length; }
-  function countMixtas(arr) { return arr.filter(function(i) { return i.isMixtoPart; }).length; }
+  function sum(arr){ return arr.reduce(function(s,i){return s+i.total;},0); }
+  function countPuras(arr){ return arr.filter(function(i){return !i.isMixtoPart;}).length; }
+  function countMixtas(arr){ return arr.filter(function(i){return i.isMixtoPart;}).length; }
 
-  // Calcular total de mixtos (solo los que NO fueron desglosados)
-  var totalMixtosDesglosados = 0;
-  var cantMixtosDesglosados = 0;
-  for (var nomMixto in mixtosDesglosados) {
-    totalMixtosDesglosados += mixtosDesglosados[nomMixto].total;
-    cantMixtosDesglosados++;
-  }
+  var cantMixtosDesglosados = Object.keys(mixtosDesglosados).length;
 
-  // Cards - Los totales ahora incluyen los montos de mixtos desglosados
-  var efPuras = countPuras(G.efectivo);
-  var efMixtas = countMixtas(G.efectivo);
-  document.getElementById('s-ef').textContent = fmt(sum(G.efectivo));
-  document.getElementById('n-ef').textContent = efPuras + ' pura(s)' + (efMixtas > 0 ? ' + ' + efMixtas + ' de mixto' : '');
-  
-  var trPuras = countPuras(G.transferencia);
-  var trMixtas = countMixtas(G.transferencia);
-  document.getElementById('s-tr').textContent = fmt(sum(G.transferencia));
-  document.getElementById('n-tr').textContent = trPuras + ' pura(s)' + (trMixtas > 0 ? ' + ' + trMixtas + ' de mixto' : '');
-  
-  var taPuras = countPuras(G.tarjeta);
-  var taMixtas = countMixtas(G.tarjeta);
-  document.getElementById('s-ta').textContent = fmt(sum(G.tarjeta));
-  document.getElementById('n-ta').textContent = taPuras + ' pura(s)' + (taMixtas > 0 ? ' + ' + taMixtas + ' de mixto' : '');
-  
-  // Card de mixto: solo los que NO fueron desglosados
+  // Cards
+  ['ef','tr','ta'].forEach(function(code){
+    var key = code==='ef'?'efectivo':code==='tr'?'transferencia':'tarjeta';
+    var puras  = countPuras(G[key]);
+    var mixtas = countMixtas(G[key]);
+    document.getElementById('s-'+code).textContent = fmt(sum(G[key]));
+    document.getElementById('n-'+code).textContent = puras+' pura(s)'+(mixtas>0?' + '+mixtas+' de mixto':'');
+  });
   document.getElementById('s-mx').textContent = fmt(sum(G.mixto));
-  document.getElementById('n-mx').textContent = G.mixto.length + ' sin desglosar' + (cantMixtosDesglosados > 0 ? ' (' + cantMixtosDesglosados + ' desglosado(s))' : '');
+  document.getElementById('n-mx').textContent = G.mixto.length+' sin desglosar'+(cantMixtosDesglosados>0?' ('+cantMixtosDesglosados+' desglosado(s))':'');
 
-  // Column grid
-  var CDEFS = [
-    {key:'efectivo',      lbl:'Efectivo',      hc:'ef', ac:'ef', fc:'ef'},
-    {key:'transferencia', lbl:'Transferencia',  hc:'tr', ac:'tr', fc:'tr'},
-    {key:'tarjeta',       lbl:'Tarjeta',        hc:'ta', ac:'ta', fc:'ta'},
-    {key:'mixto',         lbl:'Mixto',          hc:'mx', ac:'mx', fc:'mx'}
+  // Tabla de columnas
+  var CDEFS=[
+    {key:'efectivo',lbl:'Efectivo',hc:'ef',ac:'ef',fc:'ef'},
+    {key:'transferencia',lbl:'Transferencia',hc:'tr',ac:'tr',fc:'tr'},
+    {key:'tarjeta',lbl:'Tarjeta',hc:'ta',ac:'ta',fc:'ta'},
+    {key:'mixto',lbl:'Mixto',hc:'mx',ac:'mx',fc:'mx'}
   ];
   var cols = document.getElementById('cols');
   cols.innerHTML = '';
-  CDEFS.forEach(function(cd) {
-    var list = G[cd.key];
-    var s    = sum(list);
-    var col  = document.createElement('div'); col.className = 'col';
-    // header
-    col.innerHTML = '<div class="ch ' + cd.hc + '"><span class="dot ' + cd.hc + '"></span>' + cd.lbl + '</div>';
-    // items
-    var ci = document.createElement('div'); ci.className = 'ci';
+  CDEFS.forEach(function(cd){
+    var list=G[cd.key], s=sum(list);
+    var col=document.createElement('div'); col.className='col';
+    col.innerHTML='<div class="ch '+cd.hc+'"><span class="dot '+cd.hc+'"></span>'+cd.lbl+'</div>';
+    var ci=document.createElement('div'); ci.className='ci';
     if (!list.length) {
-      ci.innerHTML = '<div class="empty">Sin facturas</div>';
+      ci.innerHTML='<div class="empty">Sin facturas</div>';
+    } else if (cd.key==='transferencia') {
+      list.forEach(function(inv){
+        var r=document.createElement('div'); r.className='row';
+        var name=inv.name.replace(/\.pdf$/i,'').substring(0,22);
+        r.innerHTML='<span class="rn" title="'+inv.name+'">'+name+'</span><span class="ra '+cd.ac+'">'+fmt(inv.total)+'</span>';
+        ci.appendChild(r);
+      });
     } else {
-      // Solo mostrar desglose para transferencias
-      if (cd.key === 'transferencia') {
-        list.forEach(function(inv) {
-          var r = document.createElement('div'); r.className = 'row';
-          var name = inv.name.replace(/\.pdf$/i,'').substring(0,22);
-          r.innerHTML = '<span class="rn" title="'+inv.name+'">'+name+'</span><span class="ra '+cd.ac+'">'+fmt(inv.total)+'</span>';
-          ci.appendChild(r);
-        });
-      } else {
-        // Para otros métodos, solo mostrar total
-        ci.innerHTML = '<div class="empty" style="padding:20px 10px;font-style:normal;font-size:10px">'+list.length+' factura(s)<br>Ver resumen arriba</div>';
-      }
+      ci.innerHTML='<div class="empty" style="padding:20px 10px;font-style:normal;font-size:10px">'+list.length+' factura(s)<br>Ver resumen arriba</div>';
     }
     col.appendChild(ci);
-    // footer
-    var cf = document.createElement('div'); cf.className = 'cf ' + cd.fc;
-    cf.innerHTML = '<div class="fl">Total</div><div class="fv">'+fmt(s)+'</div><div class="fc">'+list.length+' factura(s)</div>';
+    var cf=document.createElement('div'); cf.className='cf '+cd.fc;
+    cf.innerHTML='<div class="fl">Total</div><div class="fv">'+fmt(s)+'</div><div class="fc">'+list.length+' factura(s)</div>';
     col.appendChild(cf);
     cols.appendChild(col);
   });
 
-  var valid = invoices.filter(function(i) { return i.method !== 'error' && i.method !== 'desconocido'; });
-  document.getElementById('thdr').textContent   = 'Detalle de Facturas — ' + dateStr;
-  document.getElementById('tsub').textContent   = valid.length + ' procesadas (solo se desglosan transferencias)';
-  document.getElementById('tvval').textContent  = fmt(tV);
-  document.getElementById('tvsub').textContent  = valid.length + ' facturas procesadas';
-  
-  // Actualizar efectivo a entregar (considerando gastos)
-  actualizarEfectivoEntregar();
-  
-  // Actualizar vista de gastos
-  actualizarGastos();
+  var valid = invoices.filter(function(i){return i.method!=='error'&&i.method!=='desconocido';});
+  document.getElementById('thdr').textContent  = 'Detalle de Facturas — '+dateStr;
+  document.getElementById('tsub').textContent  = valid.length+' procesadas (transferencias detalladas)';
+  document.getElementById('tvval').textContent = fmt(tV);
+  document.getElementById('tvsub').textContent = valid.length+' facturas procesadas';
 
-  // Editor manual de metodos
+  actualizarEfectivoEntregar();
+  actualizarGastos();
   renderInvoiceEditor();
 
-  // Unrecognized
-  var unkSec = document.getElementById('unk');
+  // Desconocidas
+  var unkSec=document.getElementById('unk');
   if (unk.length) {
-    unkSec.style.display = 'block';
-    var ul = document.getElementById('ulist'); ul.innerHTML = '';
-    unk.forEach(function(inv) {
-      var r = document.createElement('div'); r.className = 'wr'; r.id = 'wr-'+inv.name;
-      r.innerHTML = '<span class="wn">'+inv.name+'</span>'
+    unkSec.style.display='block';
+    var ul=document.getElementById('ulist'); ul.innerHTML='';
+    unk.forEach(function(inv){
+      var r=document.createElement('div'); r.className='wr'; r.id='wr-'+inv.name;
+      r.innerHTML='<span class="wn">'+inv.name+'</span>'
         +'<div class="mi">'
         +'<input type="number" placeholder="Monto" id="a-'+inv.name+'" min="0" step="100">'
         +'<select id="m-'+inv.name+'">'
-        +'<option value="">Método…</option>'
+        +'<option value="">Metodo...</option>'
         +'<option value="efectivo">Efectivo</option>'
         +'<option value="transferencia">Transferencia</option>'
         +'<option value="tarjeta">Tarjeta</option>'
@@ -1238,551 +1067,364 @@ function renderResults() {
       ul.appendChild(r);
     });
   } else {
-    unkSec.style.display = 'none';
+    unkSec.style.display='none';
   }
 }
 
 function addManual(name) {
-  var amt = parseFloat((document.getElementById('a-'+name)||{}).value || 0);
+  var amt = parseFloat((document.getElementById('a-'+name)||{}).value||0);
   var met = (document.getElementById('m-'+name)||{}).value;
-  if (!amt || !met) { alert('Ingresa monto y método de pago.'); return; }
-
+  if (!amt||!met) { alert('Ingresa monto y metodo de pago.'); return; }
   var breakdown = null;
-  if (met === 'mixto') {
-    breakdown = requestMixtoBreakdown(amt);
-    if (!breakdown) return;
-  }
-  
-  // Buscar y eliminar la factura desconocida
+  if (met==='mixto') { breakdown=requestMixtoBreakdown(amt); if(!breakdown) return; }
   var invIndex = -1;
-  for (var i = 0; i < invoices.length; i++) { 
-    if (invoices[i].name === name) { 
-      invIndex = i; 
-      break; 
-    } 
+  for (var i=0;i<invoices.length;i++) { if (invoices[i].name===name) { invIndex=i; break; } }
+  if (invIndex>=0) {
+    if (met==='mixto') Array.prototype.splice.apply(invoices,[invIndex,1].concat(buildMixtoPartInvoices(name,breakdown)));
+    else invoices.splice(invIndex,1,buildInvoiceRecord(name,met,amt));
   }
-  
-  if (invIndex >= 0) {
-    if (met === 'mixto') {
-      Array.prototype.splice.apply(invoices, [invIndex, 1].concat(buildMixtoPartInvoices(name, breakdown)));
-    } else {
-      invoices.splice(invIndex, 1, buildInvoiceRecord(name, met, amt));
-    }
-  }
-  
-  var el = document.getElementById('wr-'+name);
+  var el=document.getElementById('wr-'+name);
   if (el) el.parentNode.removeChild(el);
   renderResults();
 }
 
-// ── Build TXT ────────────────────────────────────────────────────────
+// ── Exportar TXT ──────────────────────────────────────────────────────────
 function buildTXT() {
   normalizeInvoices();
-
-  var G = {efectivo:[], transferencia:[], tarjeta:[], mixto:[]};
-  var tV = 0, tE = 0;
-  invoices.forEach(function(inv) {
-    if (inv.method === 'error' || inv.method === 'desconocido') return;
-    // Agregar todas las facturas a sus métodos (incluyendo partes de mixtos)
+  var G={efectivo:[],transferencia:[],tarjeta:[],mixto:[]};
+  var tV=0,tE=0;
+  invoices.forEach(function(inv){
+    if (inv.method==='error'||inv.method==='desconocido') return;
     if (G[inv.method]) G[inv.method].push(inv);
-    tV += inv.total; tE += inv.cashPart;
+    tV+=inv.total; tE+=inv.cashPart;
   });
-
-  function pl(s,n){ s=String(s); while(s.length<n) s+=' '; return s.substring(0,n); }
-  function pr(s,n){ s=String(s); while(s.length<n) s=' '+s; return s; }
+  function pl(s,n){ s=String(s); while(s.length<n)s+=' '; return s.substring(0,n); }
+  function pr(s,n){ s=String(s); while(s.length<n)s=' '+s; return s; }
   function plain(n){ return !n?'0':Math.round(n).toLocaleString('es-CO'); }
   function sum(arr){ return arr.reduce(function(s,i){return s+i.total;},0); }
-  var totalGastos = getTotalGastos();
-  var efectivoFinal = tE - totalGastos;
-  var W=72, S='='.repeat(W), S2='-'.repeat(W);
+  var totalGastos=getTotalGastos(), efectivoFinal=tE-totalGastos;
+  var W=72,S='='.repeat(W),S2='-'.repeat(W);
 
-  var t = S+'\n  CIERRE DE VENTAS DIARIO\n  '+dateStr.toUpperCase()+'\n'+S+'\n\n';
-  t += pl('METODO',22)+pr('CANT',8)+pr('TOTAL',20)+'\n'+S2+'\n';
-  t += pl('Efectivo',22)      +pr(G.efectivo.length,8)      +pr(plain(sum(G.efectivo)),20)      +'\n';
-  t += pl('Transferencia',22) +pr(G.transferencia.length,8) +pr(plain(sum(G.transferencia)),20) +'\n';
-  t += pl('Tarjeta',22)       +pr(G.tarjeta.length,8)       +pr(plain(sum(G.tarjeta)),20)       +'\n';
-  t += pl('Mixto',22)         +pr(G.mixto.length,8)         +pr(plain(sum(G.mixto)),20)         +'\n';
-  t += S2+'\nTOTAL VENTA DIA:      '+pr(plain(tV),20+8)+'\nEFECTIVO A ENTREGAR: '+pr(plain(efectivoFinal),20+8)+'\n'+S+'\n\n';
+  var t=S+'\n  CIERRE DE VENTAS DIARIO\n  '+dateStr.toUpperCase()+'\n'+S+'\n\n';
+  t+=pl('METODO',22)+pr('CANT',8)+pr('TOTAL',20)+'\n'+S2+'\n';
+  t+=pl('Efectivo',22)      +pr(G.efectivo.length,8)      +pr(plain(sum(G.efectivo)),20)      +'\n';
+  t+=pl('Transferencia',22) +pr(G.transferencia.length,8) +pr(plain(sum(G.transferencia)),20) +'\n';
+  t+=pl('Tarjeta',22)       +pr(G.tarjeta.length,8)       +pr(plain(sum(G.tarjeta)),20)       +'\n';
+  t+=pl('Mixto',22)         +pr(G.mixto.length,8)         +pr(plain(sum(G.mixto)),20)         +'\n';
+  t+=S2+'\nTOTAL VENTA DIA:      '+pr(plain(tV),28)+'\nEFECTIVO A ENTREGAR: '+pr(plain(efectivoFinal),28)+'\n'+S+'\n\n';
 
-  // 4 columns side by side
-  var CN=18, NW=14, BLK=CN+NW+2;
+  var CN=18,NW=14,BLK=CN+NW+2;
   var keys=['efectivo','transferencia','tarjeta','mixto'];
   var hdrs=['EFECTIVO','TRANSFERENCIA','TARJETA','MIXTO'];
-  t += 'DETALLE POR METODO DE PAGO\n'+S+'\n';
-  var hrow='';
-  for(var h=0;h<hdrs.length;h++) hrow+=pl(hdrs[h],BLK);
-  t+=hrow.trimEnd()+'\n';
-  var seprow='';
-  for(var h=0;h<4;h++) seprow+=S2.substring(0,BLK-1)+' ';
-  t+=seprow.trimEnd()+'\n';
-
-  var maxR=0;
-  keys.forEach(function(k){ if(G[k].length>maxR) maxR=G[k].length; });
-  if(maxR===0) maxR=1;
-
+  t+='DETALLE POR METODO DE PAGO\n'+S+'\n';
+  var hrow=''; for(var h=0;h<hdrs.length;h++) hrow+=pl(hdrs[h],BLK); t+=hrow.trimEnd()+'\n';
+  var seprow=''; for(var h=0;h<4;h++) seprow+=S2.substring(0,BLK-1)+' '; t+=seprow.trimEnd()+'\n';
+  var maxR=0; keys.forEach(function(k){if(G[k].length>maxR)maxR=G[k].length;}); if(!maxR)maxR=1;
   for(var r=0;r<maxR;r++){
-    var row='';
+    var rowTxt='';
     for(var c=0;c<keys.length;c++){
       var inv=G[keys[c]][r];
-      if(inv){
-        var name=inv.name.replace(/\.pdf$/i,'').substring(0,CN-1);
-        row+=pl(name,CN)+pr(plain(inv.total),NW)+' ';
-      } else {
-        row+=' '.repeat(BLK);
-      }
+      if(inv) rowTxt+=pl(inv.name.replace(/\.pdf$/i,'').substring(0,CN-1),CN)+pr(plain(inv.total),NW)+' ';
+      else    rowTxt+=' '.repeat(BLK);
     }
-    t+=row.trimEnd()+'\n';
+    t+=rowTxt.trimEnd()+'\n';
   }
   t+=seprow.trimEnd()+'\n';
-  var totrow='';
-  for(var c=0;c<keys.length;c++){
-    totrow+=pl('TOTAL:',CN)+pr(plain(sum(G[keys[c]])),NW)+' ';
-  }
+  var totrow=''; for(var c=0;c<keys.length;c++) totrow+=pl('TOTAL:',CN)+pr(plain(sum(G[keys[c]])),NW)+' ';
   t+=totrow.trimEnd()+'\n'+S+'\n';
   t+='TOTAL VENTA DIA: '+plain(tV)+'   |   EFECTIVO A ENTREGAR: '+plain(efectivoFinal)+'\n'+S+'\n';
+
+  // Facturas con total ajustado (flete descontado)
+  var editadas = invoices.filter(function(i){return i._editedTotal;});
+  if (editadas.length) {
+    t+='\nFACTURAS CON TOTAL AJUSTADO\n'+S2+'\n';
+    editadas.forEach(function(i){
+      var nombre=(i.baseName||i.name).replace(/\.pdf$/i,'');
+      t+=pl(nombre,44)+pr('Orig:'+plain(i._originalTotal)+' Ajust:'+plain(i.total),28)+'\n';
+    });
+    t+=S2+'\n';
+  }
+
   if (gastos.length) {
     t+='\nGASTOS DEL DIA\n'+S2+'\n';
-    gastos.forEach(function(g) {
-      t += pl(g.descripcion, 44) + pr(plain(g.monto), 28) + '\n';
-    });
-    t += S2+'\nTOTAL GASTOS: '+plain(totalGastos)+'\n'+S+'\n';
+    gastos.forEach(function(g){ t+=pl(g.descripcion,44)+pr(plain(g.monto),28)+'\n'; });
+    t+=S2+'\nTOTAL GASTOS: '+plain(totalGastos)+'\n'+S+'\n';
   }
   t+='Generado: '+new Date().toLocaleString('es-CO')+'\n';
   return t;
 }
 
-// ── Download (CSP-safe) ───────────────────────────────────────────────
+// ── Descarga CSP-safe ─────────────────────────────────────────────────────
 function safeDownload(filename, content, mime) {
-  // Try 1: data URI (avoids blob: CSP issues)
   try {
-    var a = document.createElement('a');
-    a.setAttribute('href', 'data:' + mime + ',' + encodeURIComponent(content));
-    a.setAttribute('download', filename);
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){ document.body.removeChild(a); }, 500);
+    var a=document.createElement('a');
+    a.setAttribute('href','data:'+mime+','+encodeURIComponent(content));
+    a.setAttribute('download',filename);
+    a.style.display='none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){document.body.removeChild(a);},500);
   } catch(e) {
-    // Fallback: open in new tab
-    var w = window.open('', '_blank');
+    var w=window.open('','_blank');
     if (w) {
       w.document.open();
-      w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+filename+'</title></head>'
-        +'<body><pre style="font:13px/1.6 Courier New,monospace;padding:20px;white-space:pre-wrap">'
-        +content.replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        +'</pre></body></html>');
+      w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+filename+'</title></head><body><pre style="font:13px/1.6 Courier New,monospace;padding:20px;white-space:pre-wrap">'+content.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre></body></html>');
       w.document.close();
       alert('Presiona Ctrl+S para guardar el archivo como "'+filename+'"');
     }
   }
 }
 
-// ── Button wiring (sin onclick en HTML para mayor compatibilidad) ─────
-document.getElementById('btn-txt').addEventListener('click', function() {
-  if (!invoices.length) { alert('Primero procesa una carpeta de facturas.'); return; }
+// ── Botones ───────────────────────────────────────────────────────────────
+document.getElementById('btn-txt').addEventListener('click', function(){
+  if (!invoices.length){alert('Primero procesa una carpeta de facturas.');return;}
   safeDownload('cierre-'+today.toISOString().slice(0,10)+'.txt', buildTXT(), 'text/plain;charset=utf-8');
 });
 
-document.getElementById('btn-csv').addEventListener('click', function() {
-  if (!invoices.length) { alert('Primero procesa una carpeta de facturas.'); return; }
+document.getElementById('btn-csv').addEventListener('click', function(){
+  if (!invoices.length){alert('Primero procesa una carpeta de facturas.');return;}
   normalizeInvoices();
-  var csv = '\uFEFF'+'Archivo,Metodo,Total,Efectivo\n';
-  invoices.filter(function(i){ return i.method!=='error'; }).forEach(function(inv){
-    csv += '"'+inv.name+'","'+inv.method+'","'+inv.total+'","'+inv.cashPart+'"\n';
+  var csv='\uFEFF'+'Archivo,Metodo,Total,Efectivo\n';
+  invoices.filter(function(i){return i.method!=='error';}).forEach(function(inv){
+    csv+='"'+inv.name+'","'+inv.method+'","'+inv.total+'","'+inv.cashPart+'"\n';
   });
   safeDownload('cierre-'+today.toISOString().slice(0,10)+'.csv', csv, 'text/csv;charset=utf-8');
 });
 
-document.getElementById('btn-print').addEventListener('click', function() {
-  if (!invoices.length) { alert('Primero procesa una carpeta de facturas.'); return; }
-
-  if (selectedSede === 'nevada') {
-    printLaNevada();
-  } else {
-    printNovenaLaPaz();
-  }
+document.getElementById('btn-print').addEventListener('click', function(){
+  if (!invoices.length){alert('Primero procesa una carpeta de facturas.');return;}
+  if (selectedSede==='nevada') printLaNevada();
+  else printNovenaLaPaz();
 });
 
-// ── Impresión La Nevada (formato térmico 80mm) ───────────────────────
+// ── Impresion La Nevada (termica 80mm) ────────────────────────────────────
 function printLaNevada() {
   normalizeInvoices();
-
-  var G = {efectivo:[], transferencia:[], tarjeta:[], mixto:[]};
-  var mixtosDesglosados = {}; // Para agrupar los mixtos desglosados por nombre original
-  var tV = 0, tE = 0;
-  
-  invoices.forEach(function(inv) {
-    if (inv.method === 'error' || inv.method === 'desconocido') return;
-    
-    // Si es parte de un mixto desglosado, agrupar Y agregar al método
-    if (inv.isMixtoPart) {
-      // Extraer el nombre original (antes del sufijo " (Efectivo)", etc)
-      var originalName = inv.name.replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)/, '');
-      if (!mixtosDesglosados[originalName]) {
-        mixtosDesglosados[originalName] = {efectivo: 0, transferencia: 0, tarjeta: 0, total: 0};
-      }
-      mixtosDesglosados[originalName][inv.method] += inv.total;
-      mixtosDesglosados[originalName].total += inv.total;
-      
-      // IMPORTANTE: Agregar al grupo del método para que se sume
-      if (G[inv.method]) G[inv.method].push(inv);
+  var G={efectivo:[],transferencia:[],tarjeta:[],mixto:[]};
+  var mixtosDesglosados={}, tV=0, tE=0;
+  invoices.forEach(function(inv){
+    if (inv.method==='error'||inv.method==='desconocido') return;
+    if (inv.isMixtoPart){
+      var orig=inv.name.replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)/,'');
+      if(!mixtosDesglosados[orig]) mixtosDesglosados[orig]={efectivo:0,transferencia:0,tarjeta:0,total:0};
+      mixtosDesglosados[orig][inv.method]+=inv.total;
+      mixtosDesglosados[orig].total+=inv.total;
+      if(G[inv.method]) G[inv.method].push(inv);
     } else {
-      // Facturas normales (no mixtas)
-      if (G[inv.method]) G[inv.method].push(inv);
+      if(G[inv.method]) G[inv.method].push(inv);
     }
-    
-    tV += inv.total;
-    tE += inv.cashPart;
+    tV+=inv.total; tE+=inv.cashPart;
   });
-  
-  function sum(arr){ return arr.reduce(function(s,i){return s+i.total;},0); }
-  function fmtP(n){ return !n?'$ 0':'$ '+Math.round(n).toLocaleString('es-CO'); }
+  function sum(arr){return arr.reduce(function(s,i){return s+i.total;},0);}
+  function fmtP(n){return !n?'$ 0':'$ '+Math.round(n).toLocaleString('es-CO');}
+  var totalGastos=getTotalGastos(), efectivoFinal=tE-totalGastos;
 
-  var html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
-    +'<title>Cierre La Nevada</title>'
-    +'<style>'
-    +'*{margin:0;padding:0;box-sizing:border-box}'
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cierre La Nevada</title>'
+    +'<style>*{margin:0;padding:0;box-sizing:border-box}'
     +'body{font-family:\'Courier New\',monospace;background:white;color:#000;padding:10px 6px;max-width:80mm;margin:0 auto;font-size:10px;line-height:1.3}'
-    +'.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:6px;margin-bottom:8px;page-break-after:avoid}'
+    +'.hdr{text-align:center;border-bottom:2px dashed #000;padding-bottom:6px;margin-bottom:8px}'
     +'.hdr h1{font-size:13px;font-weight:900;margin-bottom:3px}'
-    +'.hdr .fecha{font-size:9px;color:#000;font-weight:bold}'
-    +'.sec{font-size:9px;font-weight:900;border-bottom:1px solid #000;padding:5px 0 3px 0;margin:10px 0 5px 0;text-transform:uppercase;page-break-after:avoid}'
+    +'.hdr .fecha{font-size:9px;font-weight:bold}'
+    +'.sec{font-size:9px;font-weight:900;border-bottom:1px solid #000;padding:5px 0 3px;margin:10px 0 5px;text-transform:uppercase}'
     +'.row{display:flex;justify-content:space-between;padding:2px 0;font-size:9px;border-bottom:1px dotted #000}'
     +'.row .lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:bold}'
     +'.row .val{font-weight:900;margin-left:6px;white-space:nowrap}'
-    +'.subtot{display:flex;justify-content:space-between;padding:4px 0;font-size:10px;font-weight:900;margin-top:2px;page-break-after:avoid}'
-    +'.mixto-detail{padding-left:8px;font-size:8px;color:#000;font-weight:bold;font-style:italic;border-bottom:1px dotted #000}'
-    +'.total-box{border:2px solid #000;padding:6px;margin:8px 0;text-align:center;page-break-inside:avoid}'
+    +'.subtot{display:flex;justify-content:space-between;padding:4px 0;font-size:10px;font-weight:900;margin-top:2px}'
+    +'.mixto-detail{padding-left:8px;font-size:8px;font-weight:bold;font-style:italic;border-bottom:1px dotted #000}'
+    +'.total-box{border:2px solid #000;padding:6px;margin:8px 0;text-align:center}'
     +'.total-box .lbl{font-size:8px;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;font-weight:bold}'
     +'.total-box .val{font-size:15px;font-weight:900}'
-    +'.footer{text-align:center;font-size:8px;color:#000;font-weight:bold;margin-top:10px;padding-top:6px;border-top:1px dashed #000;page-break-before:avoid}'
-    +'.factura-item{font-size:8px;color:#000;padding:2px 0;border-bottom:1px dotted #000;font-weight:bold}'
-    +'@media print{'
-    +'  @page{size:80mm 297mm;margin:0}'
-    +'  body{padding:6px;font-size:9px;max-width:80mm;margin:0}'
-    +'  *{page-break-inside:avoid!important}'
-    +'}'
+    +'.footer{text-align:center;font-size:8px;font-weight:bold;margin-top:10px;padding-top:6px;border-top:1px dashed #000}'
+    +'.factura-item{font-size:8px;padding:2px 0;border-bottom:1px dotted #000;font-weight:bold}'
+    +'@media print{@page{size:80mm 297mm;margin:0}body{padding:6px;font-size:9px;max-width:80mm;margin:0}}'
     +'</style></head><body>'
-    +'<div class="hdr">'
-    +'  <h1>CIERRE DE VENTAS</h1>'
-    +'  <div class="fecha">'+dateStr+'</div>'
-    +'</div>';
+    +'<div class="hdr"><h1>CIERRE DE VENTAS</h1><div class="fecha">'+dateStr+'</div></div>';
 
-  // Resumen por método - Los totales de efectivo, transferencia y tarjeta YA incluyen las partes de mixtos desglosados
-  var totalMixtosDesglosados = 0;
-  for (var nomMixto in mixtosDesglosados) {
-    totalMixtosDesglosados += mixtosDesglosados[nomMixto].total;
-  }
-  
-  html += '<div class="sec">Resumen del día</div>';
-  html += '<div class="row"><span class="lbl">Efectivo</span><span class="val">'+fmtP(sum(G.efectivo))+'</span></div>';
-  html += '<div class="row"><span class="lbl">Transferencia</span><span class="val">'+fmtP(sum(G.transferencia))+'</span></div>';
-  html += '<div class="row"><span class="lbl">Tarjeta</span><span class="val">'+fmtP(sum(G.tarjeta))+'</span></div>';
-  
-  // Mixtos: solo los que NO fueron desglosados
-  if (G.mixto.length > 0) {
-    html += '<div class="row"><span class="lbl">Mixto (sin desglosar)</span><span class="val">'+fmtP(sum(G.mixto))+'</span></div>';
-  }
+  html+='<div class="sec">Resumen del dia</div>';
+  html+='<div class="row"><span class="lbl">Efectivo</span><span class="val">'+fmtP(sum(G.efectivo))+'</span></div>';
+  html+='<div class="row"><span class="lbl">Transferencia</span><span class="val">'+fmtP(sum(G.transferencia))+'</span></div>';
+  html+='<div class="row"><span class="lbl">Tarjeta</span><span class="val">'+fmtP(sum(G.tarjeta))+'</span></div>';
+  if (G.mixto.length>0) html+='<div class="row"><span class="lbl">Mixto (sin desglosar)</span><span class="val">'+fmtP(sum(G.mixto))+'</span></div>';
 
-  // Solo desglose de transferencias
-  if (G.transferencia.length > 0) {
-    html += '<div class="sec">Transferencias ('+G.transferencia.length+')</div>';
-    G.transferencia.forEach(function(inv) {
-      var shortName = inv.name.replace(/\.pdf$/i,'').substring(0,25);
-      // Si es parte de un mixto, ya tiene el sufijo, si no agregarlo
-      if (!inv.isMixtoPart) {
-        shortName = shortName;
-      }
-      html += '<div class="row"><span class="lbl">'+shortName+'</span><span class="val">'+fmtP(inv.total)+'</span></div>';
+  if (G.transferencia.length>0) {
+    html+='<div class="sec">Transferencias ('+G.transferencia.length+')</div>';
+    G.transferencia.forEach(function(inv){
+      html+='<div class="row"><span class="lbl">'+inv.name.replace(/\.pdf$/i,'').substring(0,25)+'</span><span class="val">'+fmtP(inv.total)+'</span></div>';
     });
-    html += '<div class="subtot"><span>Subtotal Transferencias</span><span>'+fmtP(sum(G.transferencia))+'</span></div>';
+    html+='<div class="subtot"><span>Subtotal</span><span>'+fmtP(sum(G.transferencia))+'</span></div>';
   }
-  
-  // Mostrar solo totales para otros métodos
-  if (G.efectivo.length > 0) {
-    html += '<div class="sec">Efectivo</div>';
-    html += '<div class="factura-item">'+G.efectivo.length+' factura(s) - Total: '+fmtP(sum(G.efectivo))+'</div>';
+  if (G.efectivo.length>0) {
+    html+='<div class="sec">Efectivo</div>';
+    html+='<div class="factura-item">'+G.efectivo.length+' factura(s) - Total: '+fmtP(sum(G.efectivo))+'</div>';
   }
-  
-  if (G.tarjeta.length > 0) {
-    html += '<div class="sec">Tarjeta</div>';
-    html += '<div class="factura-item">'+G.tarjeta.length+' factura(s) - Total: '+fmtP(sum(G.tarjeta))+'</div>';
+  if (G.tarjeta.length>0) {
+    html+='<div class="sec">Tarjeta</div>';
+    html+='<div class="factura-item">'+G.tarjeta.length+' factura(s) - Total: '+fmtP(sum(G.tarjeta))+'</div>';
   }
-  
-  // Mostrar mixtos desglosados (información adicional)
-  var numMixtosDesglosados = Object.keys(mixtosDesglosados).length;
-  if (numMixtosDesglosados > 0) {
-    html += '<div class="sec">📊 Desglose de Mixtos ('+numMixtosDesglosados+')</div>';
-    html += '<div class="mixto-detail" style="text-align:center;padding:4px 0;margin-bottom:4px">Los montos ya están sumados arriba ↑</div>';
-    for (var nomMixto in mixtosDesglosados) {
-      var mx = mixtosDesglosados[nomMixto];
-      var shortName = nomMixto.replace(/\.pdf$/i,'').substring(0,25);
-      html += '<div class="row"><span class="lbl">'+shortName+'</span><span class="val">'+fmtP(mx.total)+'</span></div>';
-      
-      // Mostrar desglose
-      if (mx.efectivo > 0) {
-        html += '<div class="mixto-detail">→ Efectivo: '+fmtP(mx.efectivo)+'</div>';
-      }
-      if (mx.transferencia > 0) {
-        html += '<div class="mixto-detail">→ Transferencia: '+fmtP(mx.transferencia)+'</div>';
-      }
-      if (mx.tarjeta > 0) {
-        html += '<div class="mixto-detail">→ Tarjeta: '+fmtP(mx.tarjeta)+'</div>';
-      }
+
+  var numMixDes=Object.keys(mixtosDesglosados).length;
+  if (numMixDes>0) {
+    html+='<div class="sec">Desglose de Mixtos ('+numMixDes+')</div>';
+    html+='<div class="mixto-detail" style="text-align:center;padding:4px 0;margin-bottom:4px">Los montos ya estan sumados arriba</div>';
+    for (var nm in mixtosDesglosados) {
+      var mx=mixtosDesglosados[nm];
+      html+='<div class="row"><span class="lbl">'+nm.replace(/\.pdf$/i,'').substring(0,25)+'</span><span class="val">'+fmtP(mx.total)+'</span></div>';
+      if(mx.efectivo>0) html+='<div class="mixto-detail">-> Efectivo: '+fmtP(mx.efectivo)+'</div>';
+      if(mx.transferencia>0) html+='<div class="mixto-detail">-> Transferencia: '+fmtP(mx.transferencia)+'</div>';
+      if(mx.tarjeta>0) html+='<div class="mixto-detail">-> Tarjeta: '+fmtP(mx.tarjeta)+'</div>';
     }
   }
-  
-  // Mostrar mixtos sin desglosar (si los hay)
-  if (G.mixto.length > 0) {
-    html += '<div class="sec">Mixto (sin desglosar)</div>';
-    html += '<div class="factura-item">'+G.mixto.length+' factura(s) - Total: '+fmtP(sum(G.mixto))+'</div>';
+  if (G.mixto.length>0) {
+    html+='<div class="sec">Mixto (sin desglosar)</div>';
+    html+='<div class="factura-item">'+G.mixto.length+' factura(s) - Total: '+fmtP(sum(G.mixto))+'</div>';
   }
 
-  // Totales finales
-  html += '<div class="total-box">'
-    +'<div class="lbl">Total Venta Día</div>'
-    +'<div class="val">'+fmtP(tV)+'</div>'
-    +'</div>';
-  
-  // Gastos
-  var totalGastos = getTotalGastos();
-  if (gastos.length > 0) {
-    html += '<div class="sec">Gastos del día</div>';
-    gastos.forEach(function(g) {
-      html += '<div class="row"><span class="lbl">'+g.descripcion+'</span><span class="val" style="color:#b00">-'+fmtP(g.monto)+'</span></div>';
-    });
-    html += '<div class="subtot"><span>Total Gastos</span><span style="color:#b00">'+fmtP(totalGastos)+'</span></div>';
+  html+='<div class="total-box"><div class="lbl">Total Venta Dia</div><div class="val">'+fmtP(tV)+'</div></div>';
+
+  if (gastos.length>0) {
+    html+='<div class="sec">Gastos del dia</div>';
+    gastos.forEach(function(g){ html+='<div class="row"><span class="lbl">'+g.descripcion+'</span><span class="val" style="color:#b00">-'+fmtP(g.monto)+'</span></div>'; });
+    html+='<div class="subtot"><span>Total Gastos</span><span style="color:#b00">'+fmtP(totalGastos)+'</span></div>';
   }
-  
-  var efectivoFinal = tE - totalGastos;
-  html += '<div class="total-box" style="border-color:#b00">'
-    +'<div class="lbl">Efectivo a Entregar</div>'
-    +'<div class="val" style="color:#b00">'+fmtP(efectivoFinal)+'</div>'
-    +'<div class="fecha" style="margin-top:3px">Segun metodos de pago y gastos</div>'
-    +'</div>';
 
-  html += '<div class="footer">'
-    +'Generado: '+new Date().toLocaleString('es-CO')+'<br>'
-    +'Sistema automático de cierre'
-    +'</div>';
+  html+='<div class="total-box" style="border-color:#b00"><div class="lbl">Efectivo a Entregar</div><div class="val" style="color:#b00">'+fmtP(efectivoFinal)+'</div><div class="fecha" style="margin-top:3px">Segun metodos de pago y gastos</div></div>';
+  html+='<div class="footer">Generado: '+new Date().toLocaleString('es-CO')+'<br>Sistema automatico de cierre</div>';
+  html+='<script>window.onload=function(){window.print();}<\/script></body></html>';
 
-  html += '<script>window.onload=function(){window.print();}<\/script>'
-    +'</body></html>';
-
-  var w = window.open('', '_blank');
-  if (w) {
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-  } else {
-    alert('Permite ventanas emergentes para poder imprimir.');
-  }
+  var w=window.open('','_blank');
+  if(w){w.document.open();w.document.write(html);w.document.close();}
+  else alert('Permite ventanas emergentes para poder imprimir.');
 }
 
-// ── Impresión Novena-La Paz (formato A4) ─────────────────────────────
+// ── Impresion Novena-La Paz (A4) ──────────────────────────────────────────
 function printNovenaLaPaz() {
   normalizeInvoices();
-
-  var G = {efectivo:[], transferencia:[], tarjeta:[], mixto:[]};
-  var mixtosDesglosados = {}; // Para agrupar mixtos desglosados
-  var tV = 0, tE = 0;
-  
-  invoices.forEach(function(inv) {
-    if (inv.method === 'error' || inv.method === 'desconocido') return;
-    
-    // Si es parte de un mixto desglosado, agrupar por nombre original
-    if (inv.isMixtoPart) {
-      var originalName = inv.name.replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)/, '');
-      if (!mixtosDesglosados[originalName]) {
-        mixtosDesglosados[originalName] = {efectivo: 0, transferencia: 0, tarjeta: 0, total: 0};
-      }
-      mixtosDesglosados[originalName][inv.method] += inv.total;
-      mixtosDesglosados[originalName].total += inv.total;
-      if (G[inv.method]) G[inv.method].push(inv);
+  var G={efectivo:[],transferencia:[],tarjeta:[],mixto:[]};
+  var mixtosDesglosados={}, tV=0, tE=0;
+  invoices.forEach(function(inv){
+    if (inv.method==='error'||inv.method==='desconocido') return;
+    if (inv.isMixtoPart){
+      var orig=inv.name.replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)/,'');
+      if(!mixtosDesglosados[orig]) mixtosDesglosados[orig]={efectivo:0,transferencia:0,tarjeta:0,total:0};
+      mixtosDesglosados[orig][inv.method]+=inv.total;
+      mixtosDesglosados[orig].total+=inv.total;
+      if(G[inv.method]) G[inv.method].push(inv);
     } else {
-      // Facturas normales
-      if (G[inv.method]) G[inv.method].push(inv);
+      if(G[inv.method]) G[inv.method].push(inv);
     }
-    
-    tV += inv.total;
-    tE += inv.cashPart;
+    tV+=inv.total; tE+=inv.cashPart;
   });
-  
-  function sum(arr){ return arr.reduce(function(s,i){return s+i.total;},0); }
-  function fmtP(n){ return !n?'$ 0':'$ '+Math.round(n).toLocaleString('es-CO'); }
+  function sum(arr){return arr.reduce(function(s,i){return s+i.total;},0);}
+  function fmtP(n){return !n?'$ 0':'$ '+Math.round(n).toLocaleString('es-CO');}
 
-  var COLS = [
-    {key:'efectivo',      lbl:'EFECTIVO',      color:'#1a7a1a'},
-    {key:'transferencia', lbl:'TRANSFERENCIA',  color:'#0a5c8a'},
-    {key:'tarjeta',       lbl:'TARJETA',        color:'#7a5a00'},
-    {key:'mixto',         lbl:'MIXTO',          color:'#5a2a8a'}
+  var COLS=[
+    {key:'efectivo',lbl:'EFECTIVO',color:'#1a7a1a'},
+    {key:'transferencia',lbl:'TRANSFERENCIA',color:'#0a5c8a'},
+    {key:'tarjeta',lbl:'TARJETA',color:'#7a5a00'},
+    {key:'mixto',lbl:'MIXTO',color:'#5a2a8a'}
   ];
+  var activeCols=COLS.filter(function(cd){return G[cd.key].length>0;});
+  var colPct=Math.floor(100/activeCols.length)+'%';
 
-  // Determinar columnas activas
-  // NOTA: Los mixtos desglosados ya están sumados en efectivo, transferencia y tarjeta
-  var numMixtosDesglosados = Object.keys(mixtosDesglosados).length;
-  var totalMixtosDesglosados = 0;
-  for (var nomMixto in mixtosDesglosados) {
-    totalMixtosDesglosados += mixtosDesglosados[nomMixto].total;
-  }
-  
-  var activeCols = COLS.filter(function(cd){ 
-    // Solo mostrar columna de mixto si hay mixtos sin desglosar
-    if (cd.key === 'mixto') {
-      return G[cd.key].length > 0;
-    }
-    return G[cd.key].length > 0; 
-  });
-  var colPct = Math.floor(100 / activeCols.length) + '%';
-
-  var colsHTML = '';
-  activeCols.forEach(function(cd) {
-    var list = G[cd.key];
-    var rows = '';
-
-    // Solo mostrar desglose para transferencias
-    if (cd.key === 'transferencia') {
-      list.forEach(function(inv) {
-        rows += '<tr><td class="amt">'+fmtP(inv.total)+'</td></tr>';
-      });
-    } else if (cd.key === 'mixto') {
-      // Mixtos sin desglosar
-      list.forEach(function(inv) {
-        rows += '<tr><td class="amt">'+fmtP(inv.total)+'</td></tr>';
-      });
+  var colsHTML='';
+  activeCols.forEach(function(cd){
+    var list=G[cd.key], rows='';
+    if (cd.key==='transferencia') {
+      list.forEach(function(inv){ rows+='<tr><td class="amt">'+fmtP(inv.total)+'</td></tr>'; });
+    } else if (cd.key==='mixto') {
+      list.forEach(function(inv){ rows+='<tr><td class="amt">'+fmtP(inv.total)+'</td></tr>'; });
     } else {
-      // Para otros métodos, solo mostrar resumen
-      rows += '<tr><td class="resumen">'+list.length+' factura(s)</td></tr>';
+      rows+='<tr><td class="resumen">'+list.length+' factura(s)</td></tr>';
     }
-
-    // Total de la columna (sin duplicar mixtos desglosados que ya están en otros métodos)
-    var colTotal = sum(list);
-
-    colsHTML += '<td class="col-wrap" style="width:'+colPct+'">'
+    colsHTML+='<td class="col-wrap" style="width:'+colPct+'">'
       +'<table class="col-tbl">'
       +'<thead><tr><th style="border-bottom:3px solid '+cd.color+';color:'+cd.color+'">'+cd.lbl+'</th></tr></thead>'
       +'<tbody>'+rows+'</tbody>'
-      +'<tfoot><tr><th class="col-total" style="border-top:2px solid '+cd.color+';color:'+cd.color+'">'+fmtP(colTotal)+'</th></tr></tfoot>'
+      +'<tfoot><tr><th class="col-total" style="border-top:2px solid '+cd.color+';color:'+cd.color+'">'+fmtP(sum(list))+'</th></tr></tfoot>'
       +'</table>'
       +'</td>';
   });
 
-  var html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
-    +'<title>Cierre '+dateStr+'</title>'
-    +'<style>'
-    +'*{margin:0;padding:0;box-sizing:border-box}'
+  var totalGastos=getTotalGastos(), efectivoFinal=tE-totalGastos;
+  var numMixDes=Object.keys(mixtosDesglosados).length;
+
+  var mixtosHTML='';
+  if (numMixDes>0) {
+    mixtosHTML='<div style="border:1px solid #000;border-radius:6px;padding:10px;margin-top:12px;background:#f0f0f0">'
+      +'<h4 style="font-size:9px;margin-bottom:6px;font-weight:bold;text-transform:uppercase">DESGLOSE DE MIXTOS ('+numMixDes+' factura(s))</h4>'
+      +'<p style="font-size:8px;margin-bottom:8px;font-weight:bold">Los montos ya estan incluidos en Efectivo, Transferencia y Tarjeta arriba</p>';
+    for (var nm in mixtosDesglosados) {
+      var mx=mixtosDesglosados[nm];
+      mixtosHTML+='<div style="padding:5px 0;border-bottom:1px solid #ccc">'
+        +'<div style="font-size:9px;font-weight:bold">'+nm.replace(/\.pdf$/i,'')+'  -  Total: '+fmtP(mx.total)+'</div>';
+      if(mx.efectivo>0) mixtosHTML+='<div style="font-size:8px;padding-left:10px">-> Efectivo: '+fmtP(mx.efectivo)+'</div>';
+      if(mx.transferencia>0) mixtosHTML+='<div style="font-size:8px;padding-left:10px">-> Transferencia: '+fmtP(mx.transferencia)+'</div>';
+      if(mx.tarjeta>0) mixtosHTML+='<div style="font-size:8px;padding-left:10px">-> Tarjeta: '+fmtP(mx.tarjeta)+'</div>';
+      mixtosHTML+='</div>';
+    }
+    mixtosHTML+='</div>';
+  }
+
+  var gastosHTML='';
+  if (gastos.length>0) {
+    gastosHTML='<div class="gastos-box"><h4>Gastos del Dia</h4>';
+    gastos.forEach(function(g){ gastosHTML+='<div class="gasto-item"><span class="desc">'+g.descripcion+'</span><span class="amt">-'+fmtP(g.monto)+'</span></div>'; });
+    gastosHTML+='<div class="gastos-total"><span>Total Gastos:</span><span style="color:#b00">'+fmtP(totalGastos)+'</span></div></div>';
+  }
+
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cierre '+dateStr+'</title>'
+    +'<style>*{margin:0;padding:0;box-sizing:border-box}'
     +'body{font-family:\'Courier New\',monospace;background:white;color:#111;padding:20px 24px}'
     +'.header{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end}'
     +'.header h1{font-size:15px;font-weight:900;letter-spacing:-0.5px}'
-    +'.header .fecha{font-size:9px;color:#000;font-weight:bold;text-align:right}'
+    +'.header .fecha{font-size:9px;font-weight:bold;text-align:right}'
     +'.outer{width:100%;border-collapse:collapse}'
-    +'.col-wrap{vertical-align:top;padding:0 5px;width:25%}'
+    +'.col-wrap{vertical-align:top;padding:0 5px}'
     +'.col-tbl{width:100%;border-collapse:collapse}'
     +'.col-tbl thead th{font-size:9px;letter-spacing:1.2px;padding:5px 3px;text-align:center;font-weight:900}'
-    +'.col-tbl tbody td{padding:3px 3px;text-align:right;font-size:10px;border-bottom:1px solid #000}'
+    +'.col-tbl tbody td{padding:3px;text-align:right;font-size:10px;border-bottom:1px solid #000}'
     +'.col-tbl tbody td.amt{font-weight:700}'
-    +'.col-tbl tbody td.empty{color:#000;font-weight:bold;text-align:center;font-style:italic;font-size:9px}'
-    +'.col-tbl tbody td.resumen{color:#000;text-align:center;font-size:9px;font-style:italic;padding:10px 3px;font-weight:bold}'
-    +'.mixto-sub{font-size:9px!important;color:#000!important;font-weight:bold!important;text-align:right;padding:1px 3px!important;font-style:italic}'
-    +'.mixto-sep{height:5px;border-bottom:1px dashed #000!important;padding:0!important}'
+    +'.col-tbl tbody td.resumen{text-align:center;font-size:9px;font-style:italic;padding:10px 3px;font-weight:bold}'
     +'.col-tbl tfoot th{padding:6px 3px;text-align:right;font-size:12px;font-weight:900}'
     +'.totals-row{margin-top:16px;border-top:2px solid #111;padding-top:12px;display:flex;justify-content:space-between;align-items:flex-end}'
     +'.total-block{text-align:center}'
-    +'.total-block .lbl{font-size:8px;letter-spacing:1.2px;text-transform:uppercase;color:#000;margin-bottom:3px;font-weight:bold}'
-    +'.total-block .val{font-size:18px;font-weight:900;color:#111}'
-    +'.total-block.ef-cash .val{color:#b00}'
+    +'.total-block .lbl{font-size:8px;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:3px;font-weight:bold}'
+    +'.total-block .val{font-size:18px;font-weight:900}'
     +'.gastos-box{border:1px solid #000;border-radius:6px;padding:10px;margin-top:12px;background:#f9f9f9}'
-    +'.gastos-box h4{font-size:9px;margin-bottom:6px;color:#000;text-transform:uppercase;letter-spacing:0.8px;font-weight:bold}'
+    +'.gastos-box h4{font-size:9px;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px;font-weight:bold}'
     +'.gasto-item{display:flex;justify-content:space-between;padding:3px 0;font-size:9px;border-bottom:1px dotted #000}'
-    +'.gasto-item .desc{color:#000;font-weight:bold}'
+    +'.gasto-item .desc{font-weight:bold}'
     +'.gasto-item .amt{font-weight:900;color:#b00}'
     +'.gastos-total{display:flex;justify-content:space-between;padding:5px 0;margin-top:5px;font-size:10px;font-weight:900;border-top:2px solid #000}'
     +'.firma{margin-top:24px;display:flex;gap:30px}'
-    +'.firma-box{flex:1;border-top:1px solid #000;padding-top:5px;font-size:9px;color:#000;font-weight:bold;text-align:center}'
-    +'.footer-note{margin-top:14px;font-size:8px;color:#000;font-weight:bold;text-align:center}'
-    +'@media print{'
-    +'  @page{margin:0.8cm;size:A4}'
-    +'  body{padding:0}'
-    +'}'
+    +'.firma-box{flex:1;border-top:1px solid #000;padding-top:5px;font-size:9px;font-weight:bold;text-align:center}'
+    +'.footer-note{margin-top:14px;font-size:8px;font-weight:bold;text-align:center}'
+    +'@media print{@page{margin:0.8cm;size:A4}body{padding:0}}'
     +'</style></head><body>'
-    +'<div class="header">'
-    +'  <h1>CIERRE DE VENTAS</h1>'
-    +'  <div class="fecha">'+dateStr.toUpperCase()+'<br>Generado: '+new Date().toLocaleTimeString('es-CO')+'</div>'
-    +'</div>'
-    +'<table class="outer"><tr>'+colsHTML+'</tr></table>';
-  
-  // Mostrar desglose de mixtos (información adicional)
-  var mixtosHTML = '';
-  if (numMixtosDesglosados > 0) {
-    mixtosHTML += '<div style="border:1px solid #000;border-radius:6px;padding:10px;margin-top:12px;background:#f0f0f0">';
-    mixtosHTML += '<h4 style="font-size:9px;margin-bottom:6px;color:#000;text-transform:uppercase;letter-spacing:0.8px;font-weight:bold">📊 DESGLOSE DE MIXTOS ('+numMixtosDesglosados+' factura(s))</h4>';
-    mixtosHTML += '<p style="font-size:8px;color:#000;margin-bottom:8px;font-weight:bold">Los montos ya están incluidos en Efectivo, Transferencia y Tarjeta arriba</p>';
-    for (var nomMixto in mixtosDesglosados) {
-      var mx = mixtosDesglosados[nomMixto];
-      var shortName = nomMixto.replace(/\.pdf$/i,'');
-      mixtosHTML += '<div style="padding:5px 0;border-bottom:1px solid #ccc">';
-      mixtosHTML += '<div style="font-size:9px;font-weight:bold;color:#000">'+shortName+' - Total: '+fmtP(mx.total)+'</div>';
-      if (mx.efectivo > 0) {
-        mixtosHTML += '<div style="font-size:8px;padding-left:10px;color:#000">→ Efectivo: '+fmtP(mx.efectivo)+'</div>';
-      }
-      if (mx.transferencia > 0) {
-        mixtosHTML += '<div style="font-size:8px;padding-left:10px;color:#000">→ Transferencia: '+fmtP(mx.transferencia)+'</div>';
-      }
-      if (mx.tarjeta > 0) {
-        mixtosHTML += '<div style="font-size:8px;padding-left:10px;color:#000">→ Tarjeta: '+fmtP(mx.tarjeta)+'</div>';
-      }
-      mixtosHTML += '</div>';
-    }
-    mixtosHTML += '</div>';
-  }
-  
-  // Gastos
-  var totalGastos = getTotalGastos();
-  var gastosHTML = '';
-  if (gastos.length > 0) {
-    gastosHTML += '<div class="gastos-box">';
-    gastosHTML += '<h4>💰 Gastos del Día</h4>';
-    gastos.forEach(function(g) {
-      gastosHTML += '<div class="gasto-item"><span class="desc">'+g.descripcion+'</span><span class="amt">-'+fmtP(g.monto)+'</span></div>';
-    });
-    gastosHTML += '<div class="gastos-total"><span>Total Gastos:</span><span style="color:#b00">'+fmtP(totalGastos)+'</span></div>';
-    gastosHTML += '</div>';
-  }
-  
-  var efectivoFinal = tE - totalGastos;
-  
-  html += mixtosHTML
-    + gastosHTML
+    +'<div class="header"><h1>CIERRE DE VENTAS</h1><div class="fecha">'+dateStr.toUpperCase()+'<br>Generado: '+new Date().toLocaleTimeString('es-CO')+'</div></div>'
+    +'<table class="outer"><tr>'+colsHTML+'</tr></table>'
+    +mixtosHTML
+    +gastosHTML
     +'<div class="totals-row">'
-    +'  <div class="total-block"><div class="lbl">Total Venta Día</div><div class="val">'+fmtP(tV)+'</div></div>'
-    +'  <div class="total-block ef-cash"><div class="lbl">Efectivo a Entregar</div><div class="val">'+fmtP(efectivoFinal)+'</div><div style="font-size:7px;color:#000;font-weight:bold;margin-top:2px">Segun metodos de pago y gastos</div></div>'
+    +'  <div class="total-block"><div class="lbl">Total Venta Dia</div><div class="val">'+fmtP(tV)+'</div></div>'
+    +'  <div class="total-block"><div class="lbl">Efectivo a Entregar</div><div class="val" style="color:#b00">'+fmtP(efectivoFinal)+'</div><div style="font-size:7px;font-weight:bold;margin-top:2px">Segun metodos de pago y gastos</div></div>'
     +'</div>'
-    +'<div class="firma">'
-    +'  <div class="firma-box">Elaborado por</div>'
-    +'  <div class="firma-box">Revisado por</div>'
-    +'  <div class="firma-box">Autorizado por</div>'
-    +'</div>'
-    +'<div class="footer-note">Documento generado automáticamente — Cierre de ventas '+dateStr+'</div>'
+    +'<div class="firma"><div class="firma-box">Elaborado por</div><div class="firma-box">Revisado por</div><div class="firma-box">Autorizado por</div></div>'
+    +'<div class="footer-note">Documento generado automaticamente &#8212; Cierre de ventas '+dateStr+'</div>'
     +'<script>window.onload=function(){window.print();}<\/script>'
     +'</body></html>';
 
-  var w = window.open('', '_blank');
-  if (w) {
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-  } else {
-    alert('Opera bloqueó la ventana emergente. Permite ventanas emergentes para este archivo e intenta de nuevo.');
-  }
+  var w=window.open('','_blank');
+  if(w){w.document.open();w.document.write(html);w.document.close();}
+  else alert('Permite ventanas emergentes para poder imprimir.');
 }
 
-document.getElementById('btn-reset').addEventListener('click', function() {
-  invoices = [];
-  gastos = [];
-  dz.style.display = 'block';
-  document.getElementById('results').style.display = 'none';
-  document.getElementById('prog').style.display = 'none';
-  document.getElementById('folder-input').value = '';
+// ── Nuevo cierre ──────────────────────────────────────────────────────────
+document.getElementById('btn-reset').addEventListener('click', function(){
+  invoices=[]; gastos=[];
+  dz.style.display='block';
+  document.getElementById('results').style.display='none';
+  document.getElementById('prog').style.display='none';
+  document.getElementById('folder-input').value='';
 });
 </script>
 </body>
