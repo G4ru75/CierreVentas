@@ -214,7 +214,12 @@ footer{border-top:1px solid var(--border);padding-top:14px;text-align:center;fon
     </button>
     <button onclick="selectSede('novena')" class="sede-btn" style="width:240px;padding:32px 24px;background:var(--surface);border:2px solid var(--border2);border-radius:12px;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace">
       <div style="font-size:40px;margin-bottom:16px">&#128196;</div>
-      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--teal);margin-bottom:8px">Novena - La Paz</div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--teal);margin-bottom:8px">La Novena</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:bold;line-height:1.5">Impresora estandar<br>(papel A4)</div>
+    </button>
+    <button onclick="selectSede('paz')" class="sede-btn" style="width:240px;padding:32px 24px;background:var(--surface);border:2px solid var(--border2);border-radius:12px;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace">
+      <div style="font-size:40px;margin-bottom:16px">&#127754;</div>
+      <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--yellow);margin-bottom:8px">La Paz</div>
       <div style="font-size:11px;color:var(--muted);font-weight:bold;line-height:1.5">Impresora estandar<br>(papel A4)</div>
     </button>
   </div>
@@ -351,8 +356,12 @@ function selectSede(sede) {
   selectedSede = sede;
   document.getElementById('sede-selector').style.display = 'none';
   document.getElementById('main-content').style.display  = 'block';
-  var label = sede === 'nevada' ? 'Sede: La Nevada (Impresion termica 80mm)' : 'Sede: Novena - La Paz (Impresion A4)';
-  document.getElementById('sede-name').textContent = label;
+  var labels = {
+    'nevada': 'Sede: La Nevada (Impresion termica 80mm)',
+    'novena': 'Sede: La Novena (Impresion A4)',
+    'paz': 'Sede: La Paz (Impresion A4)'
+  };
+  document.getElementById('sede-name').textContent = labels[sede] || labels['nevada'];
 }
 
 function changeSede() {
@@ -1193,7 +1202,8 @@ document.getElementById('btn-csv').addEventListener('click', function(){
 document.getElementById('btn-print').addEventListener('click', function(){
   if (!invoices.length){alert('Primero procesa una carpeta de facturas.');return;}
   if (selectedSede==='nevada') printLaNevada();
-  else printNovenaLaPaz();
+  else if (selectedSede==='novena') printNovena();
+  else if (selectedSede==='paz') printPaz();
 });
 
 // ── Impresion La Nevada (termica 80mm) ────────────────────────────────────
@@ -1216,6 +1226,7 @@ function printLaNevada() {
   });
   function sum(arr){return arr.reduce(function(s,i){return s+i.total;},0);}
   function fmtP(n){return !n?'$ 0':'$ '+Math.round(n).toLocaleString('es-CO');}
+  var sedeName='LA NEVADA';
   var totalGastos=getTotalGastos(), efectivoFinal=tE-totalGastos;
 
   var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cierre La Nevada</title>'
@@ -1225,6 +1236,7 @@ function printLaNevada() {
     +'.hdr h1{font-size:13px;font-weight:900;margin-bottom:3px}'
     +'.hdr .fecha{font-size:9px;font-weight:bold}'
     +'.sec{font-size:9px;font-weight:900;border-bottom:1px solid #000;padding:5px 0 3px;margin:10px 0 5px;text-transform:uppercase}'
+    +'.sede-name{font-size:16px;font-weight:900;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;text-align:center}'
     +'.row{display:flex;justify-content:space-between;padding:2px 0;font-size:9px;border-bottom:1px dotted #000}'
     +'.row .lbl{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:bold}'
     +'.row .val{font-weight:900;margin-left:6px;white-space:nowrap}'
@@ -1237,6 +1249,7 @@ function printLaNevada() {
     +'.factura-item{font-size:8px;padding:2px 0;border-bottom:1px dotted #000;font-weight:bold}'
     +'@media print{@page{size:80mm 297mm;margin:0}body{padding:6px;font-size:9px;max-width:80mm;margin:0}}'
     +'</style></head><body>'
+    +'<div class="sede-name">'+sedeName+'</div>'
     +'<div class="hdr"><h1>CIERRE DE VENTAS</h1><div class="fecha">'+dateStr+'</div></div>';
 
   html+='<div class="sec">Resumen del dia</div>';
@@ -1295,8 +1308,8 @@ function printLaNevada() {
   else alert('Permite ventanas emergentes para poder imprimir.');
 }
 
-// ── Impresion Novena-La Paz (A4) ──────────────────────────────────────────
-function printNovenaLaPaz() {
+// ── Impresion La Novena (A4) ──────────────────────────────────────────────
+function printNovena() {
   normalizeInvoices();
   var G={efectivo:[],transferencia:[],tarjeta:[],mixto:[]};
   var mixtosDesglosados={}, tV=0, tE=0;
@@ -1315,6 +1328,7 @@ function printNovenaLaPaz() {
   });
   function sum(arr){return arr.reduce(function(s,i){return s+i.total;},0);}
   function fmtP(n){return !n?'$ 0':'$ '+Math.round(n).toLocaleString('es-CO');}
+  var sedeName='LA NOVENA';
 
   var COLS=[
     {key:'efectivo',lbl:'EFECTIVO',color:'#1a7a1a'},
@@ -1398,8 +1412,10 @@ function printNovenaLaPaz() {
     +'.firma{margin-top:24px;display:flex;gap:30px}'
     +'.firma-box{flex:1;border-top:1px solid #000;padding-top:5px;font-size:9px;font-weight:bold;text-align:center}'
     +'.footer-note{margin-top:14px;font-size:8px;font-weight:bold;text-align:center}'
+    +'.sede-name{font-size:28px;font-weight:900;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;text-align:center}'
     +'@media print{@page{margin:0.8cm;size:A4}body{padding:0}}'
     +'</style></head><body>'
+    +'<div class="sede-name">'+sedeName+'</div>'
     +'<div class="header"><h1>CIERRE DE VENTAS</h1><div class="fecha">'+dateStr.toUpperCase()+'<br>Generado: '+new Date().toLocaleTimeString('es-CO')+'</div></div>'
     +'<table class="outer"><tr>'+colsHTML+'</tr></table>'
     +mixtosHTML
@@ -1412,6 +1428,80 @@ function printNovenaLaPaz() {
     +'<div class="footer-note">Documento generado automaticamente &#8212; Cierre de ventas '+dateStr+'</div>'
     +'<script>window.onload=function(){window.print();}<\/script>'
     +'</body></html>';
+
+  var w=window.open('','_blank');
+  if(w){w.document.open();w.document.write(html);w.document.close();}
+  else alert('Permite ventanas emergentes para poder imprimir.');
+}
+
+// ── Impresion La Paz (A4) ─────────────────────────────────────────────────
+function printPaz() {
+  normalizeInvoices();
+  var G={efectivo:[],transferencia:[],tarjeta:[],mixto:[]};
+  var mixtosDesglosados={}, tV=0, tE=0;
+  invoices.forEach(function(inv){
+    if (inv.method==='error'||inv.method==='desconocido') return;
+    if (inv.isMixtoPart){
+      var orig=inv.name.replace(/\s*\((Efectivo|Transferencia|Tarjeta)\)/,'');
+      if(!mixtosDesglosados[orig]) mixtosDesglosados[orig]={efectivo:0,transferencia:0,tarjeta:0,total:0};
+      mixtosDesglosados[orig][inv.method]+=inv.total;
+      mixtosDesglosados[orig].total+=inv.total;
+      if(G[inv.method]) G[inv.method].push(inv);
+    } else {
+      if(G[inv.method]) G[inv.method].push(inv);
+    }
+    tV+=inv.total; tE+=inv.cashPart;
+  });
+  function sum(arr){return arr.reduce(function(s,i){return s+i.total;},0);}
+  function fmtP(n){return !n?'$ 0':'$ '+Math.round(n).toLocaleString('es-CO');}
+  var sedeName='LA PAZ';
+
+  var COLS=[
+    {key:'efectivo',lbl:'EFECTIVO',color:'#1a7a1a'},
+    {key:'transferencia',lbl:'TRANSFERENCIA',color:'#0a5c8a'},
+    {key:'tarjeta',lbl:'TARJETA',color:'#7a5a00'},
+    {key:'mixto',lbl:'MIXTO',color:'#5a2a8a'}
+  ];
+  var activeCols=COLS.filter(function(cd){return G[cd.key].length>0;});
+  var colPct=Math.floor(100/activeCols.length)+'%';
+
+  var colsHTML='';
+  activeCols.forEach(function(cd){
+    var list=G[cd.key], rows='';
+    if (cd.key==='transferencia') {
+      list.forEach(function(inv){ rows+='<tr><td class="amt">'+fmtP(inv.total)+'</td></tr>'; });
+    } else if (cd.key==='mixto') {
+      list.forEach(function(inv){ rows+='<tr><td class="amt">'+fmtP(inv.total)+'</td></tr>'; });
+    } else {
+      rows+='<tr><td class="resumen">'+list.length+' factura(s)</td></tr>';
+    }
+    colsHTML+='<td class="col-wrap" style="width:'+colPct+'"><table class="col-tbl"><thead><tr><th style="border-bottom:3px solid '+cd.color+';color:'+cd.color+'">'+cd.lbl+'</th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr><th class="col-total" style="border-top:2px solid '+cd.color+';color:'+cd.color+'">'+fmtP(sum(list))+'</th></tr></tfoot></table></td>';
+  });
+
+  var totalGastos=getTotalGastos(), efectivoFinal=tE-totalGastos;
+  var numMixDes=Object.keys(mixtosDesglosados).length;
+
+  var mixtosHTML='';
+  if (numMixDes>0) {
+    mixtosHTML='<div style="border:1px solid #000;border-radius:6px;padding:10px;margin-top:12px;background:#f0f0f0"><h4 style="font-size:9px;margin-bottom:6px;font-weight:bold;text-transform:uppercase">DESGLOSE DE MIXTOS ('+numMixDes+' factura(s))</h4><p style="font-size:8px;margin-bottom:8px;font-weight:bold">Los montos ya estan incluidos en Efectivo, Transferencia y Tarjeta arriba</p>';
+    for (var nm in mixtosDesglosados) {
+      var mx=mixtosDesglosados[nm];
+      mixtosHTML+='<div style="padding:5px 0;border-bottom:1px solid #ccc"><div style="font-size:9px;font-weight:bold">'+nm.replace(/\.pdf$/i,'')+' - Total: '+fmtP(mx.total)+'</div>';
+      if(mx.efectivo>0) mixtosHTML+='<div style="font-size:8px;padding-left:10px">-> Efectivo: '+fmtP(mx.efectivo)+'</div>';
+      if(mx.transferencia>0) mixtosHTML+='<div style="font-size:8px;padding-left:10px">-> Transferencia: '+fmtP(mx.transferencia)+'</div>';
+      if(mx.tarjeta>0) mixtosHTML+='<div style="font-size:8px;padding-left:10px">-> Tarjeta: '+fmtP(mx.tarjeta)+'</div></div>';
+    }
+    mixtosHTML+='</div>';
+  }
+
+  var gastosHTML='';
+  if (gastos.length>0) {
+    gastosHTML='<div class="gastos-box"><h4>Gastos del Dia</h4>';
+    gastos.forEach(function(g){ gastosHTML+='<div class="gasto-item"><span class="desc">'+g.descripcion+'</span><span class="amt">-'+fmtP(g.monto)+'</span></div>'; });
+    gastosHTML+='<div class="gastos-total"><span>Total Gastos:</span><span style="color:#b00">'+fmtP(totalGastos)+'</span></div></div>';
+  }
+
+  var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cierre '+dateStr+'</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:\'Courier New\',monospace;background:white;color:#111;padding:20px 24px}.header{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-end}.header h1{font-size:15px;font-weight:900;letter-spacing:-0.5px}.header .fecha{font-size:9px;font-weight:bold;text-align:right}.outer{width:100%;border-collapse:collapse}.col-wrap{vertical-align:top;padding:0 5px}.col-tbl{width:100%;border-collapse:collapse}.col-tbl thead th{font-size:9px;letter-spacing:1.2px;padding:5px 3px;text-align:center;font-weight:900}.col-tbl tbody td{padding:3px;text-align:right;font-size:10px;border-bottom:1px solid #000}.col-tbl tbody td.amt{font-weight:700}.col-tbl tbody td.resumen{text-align:center;font-size:9px;font-style:italic;padding:10px 3px;font-weight:bold}.col-tbl tfoot th{padding:6px 3px;text-align:right;font-size:12px;font-weight:900}.totals-row{margin-top:16px;border-top:2px solid #111;padding-top:12px;display:flex;justify-content:space-between;align-items:flex-end}.total-block{text-align:center}.total-block .lbl{font-size:8px;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:3px;font-weight:bold}.total-block .val{font-size:18px;font-weight:900}.gastos-box{border:1px solid #000;border-radius:6px;padding:10px;margin-top:12px;background:#f9f9f9}.gastos-box h4{font-size:9px;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px;font-weight:bold}.gasto-item{display:flex;justify-content:space-between;padding:3px 0;font-size:9px;border-bottom:1px dotted #000}.gasto-item .desc{font-weight:bold}.gasto-item .amt{font-weight:900;color:#b00}.gastos-total{display:flex;justify-content:space-between;padding:5px 0;margin-top:5px;font-size:10px;font-weight:900;border-top:2px solid #000}.firma{margin-top:24px;display:flex;gap:30px}.firma-box{flex:1;border-top:1px solid #000;padding-top:5px;font-size:9px;font-weight:bold;text-align:center}.footer-note{margin-top:14px;font-size:8px;font-weight:bold;text-align:center}.sede-name{font-size:28px;font-weight:900;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;text-align:center}@media print{@page{margin:0.8cm;size:A4}body{padding:0}}</style></head><body><div class="sede-name">'+sedeName+'</div><div class="header"><h1>CIERRE DE VENTAS</h1><div class="fecha">'+dateStr.toUpperCase()+'<br>Generado: '+new Date().toLocaleTimeString('es-CO')+'</div></div><table class="outer"><tr>'+colsHTML+'</tr></table>'+mixtosHTML+gastosHTML+'<div class="totals-row"><div class="total-block"><div class="lbl">Total Venta Dia</div><div class="val">'+fmtP(tV)+'</div></div><div class="total-block"><div class="lbl">Efectivo a Entregar</div><div class="val" style="color:#b00">'+fmtP(efectivoFinal)+'</div><div style="font-size:7px;font-weight:bold;margin-top:2px">Segun metodos de pago y gastos</div></div></div><div class="firma"><div class="firma-box">Elaborado por</div><div class="firma-box">Revisado por</div><div class="firma-box">Autorizado por</div></div><div class="footer-note">Documento generado automaticamente &#8212; Cierre de ventas '+dateStr+'</div><script>window.onload=function(){window.print();}<\/script></body></html>';
 
   var w=window.open('','_blank');
   if(w){w.document.open();w.document.write(html);w.document.close();}
